@@ -30,9 +30,44 @@ static char *code_format =
 "  printf(\"%%u\", result); "
 "  return 0; "
 "}";
+/* TODO:compose these to a struct state */
+int buf_idx = 0;
 
-static void gen_rand_expr() {
-  buf[0] = '\0';
+uint32_t choose(uint32_t n){
+	return rand() % n;
+}
+
+static void gen(char c){
+	/* buf array overflow, do nothing */
+	if(buf_idx >= 65535) return;
+
+	buf[buf_idx++] = c;
+}
+
+static void gen_num(){
+	char num = '0' + choose(10); // generate '0' to '9'
+	if(num == '0' && buf_idx > 0 &&  buf[buf_idx-1] == '/') num = '1'; // avoid / followed with 0 
+
+	gen(num);
+	gen('u'); // make sure expr computes in unsigned way.
+}
+
+static void gen_rand_op(){
+	char op_array[] = "+-*/";
+
+	gen(op_array[choose(4)]);
+}
+
+static void gen_rand_expr(){
+	if(buf_idx >= 65535) return; 
+
+	switch(choose(3)){
+		case 0: gen_num(); break;
+		case 1: gen('('); gen_rand_expr(); gen(')'); break;
+		default: gen_rand_expr(); gen_rand_op(); gen_rand_expr(); break;
+	}
+	/* make sure expr legal, only gen space in the border */
+	if(choose(10) < 1) gen(' '); // p = 0.1
 }
 
 int main(int argc, char *argv[]) {
@@ -44,7 +79,9 @@ int main(int argc, char *argv[]) {
   }
   int i;
   for (i = 0; i < loop; i ++) {
+	buf_idx = 0;
     gen_rand_expr();
+	buf[buf_idx] = '\0'; // make buf end
 
     sprintf(code_buf, code_format, buf);
 
@@ -53,7 +90,8 @@ int main(int argc, char *argv[]) {
     fputs(code_buf, fp);
     fclose(fp);
 
-    int ret = system("gcc /tmp/.code.c -o /tmp/.expr");
+	/* if there is warning, return is not 0 */
+    int ret = system("gcc -Wall -Werror /tmp/.code.c -o /tmp/.expr");
     if (ret != 0) continue;
 
     fp = popen("/tmp/.expr", "r");
