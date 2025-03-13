@@ -30,8 +30,9 @@ int main(int argc, char *argv[]) {
 #else
   init_monitor(argc, argv);
 #endif
-//  test_expr_gen();
-   //test_isa_reg_str2val();
+#ifdef CONFIG_LONGEXPR
+  test_expr_gen();
+#endif
   /* Start engine. */
   engine_start();
 
@@ -41,7 +42,7 @@ int main(int argc, char *argv[]) {
 void test_expr_gen(){
 	uint32_t line_number = 0, given_val = 0, expr_result = 0;
 	uint32_t illegal_num = 0, wa_num = 0;
-	char given_expr[65536] = {};
+	char given_expr[MAX_TOKENS] = {};
 
 	FILE *fp = fopen("/home/hniii98/Project/ysyx/ysyx-workbench/nemu/tools/gen-expr/input", "r");
 	assert(fp != NULL);

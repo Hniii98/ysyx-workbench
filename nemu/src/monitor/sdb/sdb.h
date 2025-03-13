@@ -19,10 +19,12 @@
 #include <common.h>
 
 
+// max op_type number, for making ranks_map and aritys_map
+#define MAX_OP_TYPE 255 + 100
 typedef struct watchpoint{
 	int NO;
 	struct watchpoint *next;
-	char expr[65536+1];
+	char expr[MAX_TOKENS];
 	word_t recorded;
 }WP;
 word_t expr(char *e, bool *success);
