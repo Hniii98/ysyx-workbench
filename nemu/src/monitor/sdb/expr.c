@@ -14,7 +14,7 @@
  ***************************************************************************************/
 
 #include <isa.h>
-
+#include "sdb.h"
 /* We use the POSIX regex functions to process regular expressions.
  * Type 'man regex' for more information about POSIX regex functions.
  */
@@ -94,7 +94,6 @@ void init_regex() {
   }
 }
 
-#define MAX_TOKENS_LEN 65536
 typedef struct token {
   int type;
   char str[32];
@@ -102,7 +101,7 @@ typedef struct token {
 
 // static Token tokens[32] __attribute__((used)) = {};
 /* for testing long expr */
-static Token tokens[MAX_TOKENS_LEN] __attribute__((used)) = {};
+static Token tokens[MAX_TOKENS] __attribute__((used)) = {};
 static int nr_token __attribute__((used)) = 0;
 
 static bool make_token(char *e) {
@@ -114,9 +113,9 @@ static bool make_token(char *e) {
 
   while (e[position] != '\0') {
     /* Token numbers over MAX_TOKENS_LEN, panic */
-    if (nr_token > MAX_TOKENS_LEN) { // for testing expr-gen, make it larger
+    if (nr_token > MAX_TOKENS) { 
       panic("The tokens of expression are more than max array length %d",
-            MAX_TOKENS_LEN);
+            MAX_TOKENS);
     }
 
     /* Try all rules one by one. */
@@ -179,7 +178,7 @@ static bool make_token(char *e) {
                 substr_len, tokens[nr_token].str);
 
           } else {
-            strncpy(tokens[nr_token].str, e + position - substr_len, 32);
+            strncpy(tokens[nr_token].str, e + position - substr_len, substr_len);
           }
           nr_token++;
           break;
@@ -201,7 +200,6 @@ static bool make_token(char *e) {
   return true;
 }
 
-#define MAX_OP_TYPE 255 + 100
 static bool computable __attribute__((used)) = true;
 
 /*  op_rank is smaller, priority is higher */
@@ -225,10 +223,9 @@ static struct rank {
 
 static int ranks_map[MAX_OP_TYPE] = {0};
 static int aritys_map[MAX_OP_TYPE] = {0};
-
 /* check whether given expresionn consist of paired parentheses */
 static bool check_parentheses_match(int left, int right) {
-  char stack[MAX_TOKENS_LEN] = {}; // simulate stack
+  char stack[MAX_TOKENS] = {}; // simulate stack
   int sp = 0;                      // stack pointer
 
   int i = left;

@@ -15,7 +15,6 @@
 
 #include "sdb.h"
 
-#define NR_EXPR 65536 + 1 // max_token is 65536
 #define NR_WP 32
 
 
