@@ -1,0 +1,3 @@
+[submodule "nvboard"]
+	path = nvboard
+	url = https://github.com/Hniii98/nvboard.git
