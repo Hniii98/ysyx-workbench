@@ -26,9 +26,9 @@ $(LIGHT_AUTO_BIND): $(LIGHT_NXDC_FILES)
 	@python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
 
 # Source files
-FPGA_CSRC = $(abspath ./csrc/fpga.cpp) $(FPGA_AUTO_BIND)
-CLI_CSRC = $(abspath ./csrc/cli.cpp)
-LIGHT_CSRC = $(abspath ./csrc/light.cpp) $(LIGHT_AUTO_BIND)
+FPGA_CSRCS = $(abspath ./csrc/fpga.cpp) $(FPGA_AUTO_BIND)
+CLI_CSRCS = $(abspath ./csrc/cli.cpp)
+LIGHT_CSRCS = $(abspath ./csrc/light.cpp) $(LIGHT_AUTO_BIND)
 
 FPGA_VSRCS = $(abspath ./vsrc/top.v)
 CLI_VSRCS = $(abspath ./vsrc/top.v)
@@ -50,7 +50,7 @@ define BUILD_TARGET
 $(1)_OBJ_DIR = $(BUILD_DIR)/$(1)_obj_dir
 $(1)_BIN = $(BUILD_DIR)/$(1)
 
-$$($(1)_BIN): $$($(1)_VSRCS) $(2) $(NVBOARD_ARCHIVE)
+$$($(1)_BIN): $$($(1)_VSRCS)  $$($(1)_CSRCS) $(NVBOARD_ARCHIVE)
 	@rm -rf $$
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
         --top-module $($(1)_TOPNAME) $$^\
@@ -66,9 +66,9 @@ sim: FPGA_top CLI_top LIGHT_top
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 
 # Build targets
-$(eval $(call BUILD_TARGET,FPGA,$(FPGA_CSRC)))
-$(eval $(call BUILD_TARGET,CLI,$(CLI_CSRC)))
-$(eval $(call BUILD_TARGET,LIGHT,$(LIGHT_CSRC)))
+$(eval $(call BUILD_TARGET,FPGA))
+$(eval $(call BUILD_TARGET,CLI,))
+$(eval $(call BUILD_TARGET,LIGHT))
 
 # Default target
 default:  sim
