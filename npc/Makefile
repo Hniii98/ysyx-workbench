@@ -16,8 +16,8 @@ VERILATOR_CFLAGS += -MMD --build -cc  \
 BUILD_DIR = ./build
 
 # Auto bind
-FPGA_AUTO_BIND = $(BUILD_DIR)/auto_bind_fpga.cpp
-LIGHT_AUTO_BIND = $(BUILD_DIR)/auto_bind_light.cpp
+FPGA_AUTO_BIND = $(abspath $(BUILD_DIR)/auto_bind_fpga.cpp)
+LIGHT_AUTO_BIND = $(abspath $(BUILD_DIR)/auto_bind_light.cpp)
 
 $(FPGA_AUTO_BIND): $(FPGA_NXDC_FILES)
 	@python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
@@ -41,7 +41,6 @@ include $(NVBOARD_HOME)/scripts/nvboard.mk
 INC_PATH ?=
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) 
-LDFLAGS += -lSDL2 -lSDL2_image -lSDL2_ttf
 
 # Create build directory
 $(shell mkdir -p $(BUILD_DIR))
@@ -54,8 +53,7 @@ $(1)_BIN = $(BUILD_DIR)/$(1)
 $$($(1)_BIN): $$($(1)_VSRCS) $(2) $(NVBOARD_ARCHIVE)
 	@rm -rf $$
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
-        --top-module $($(1)_TOPNAME) \
-        $$(abspath $$($(1)_VSRCS)) $$(abspath $(2)) $$(abspath $(NVBOARD_ARCHIVE)) \
+        --top-module $($(1)_TOPNAME) $$^\
         $(addprefix -CFLAGS , $(CXXFLAGS) -DTOP_NAME="\"V$($(1)_TOPNAME)\"") \
         $(addprefix -LDFLAGS , $(LDFLAGS)) \
         --Mdir $$($(1)_OBJ_DIR) --exe -o $$(abspath $$($(1)_BIN))
@@ -73,7 +71,7 @@ $(eval $(call BUILD_TARGET,CLI,$(CLI_CSRC)))
 $(eval $(call BUILD_TARGET,LIGHT,$(LIGHT_CSRC)))
 
 # Default target
-default: FPGA_top CLI_top LIGHT_top
+default:  sim
 
 # Clean
 clean:
