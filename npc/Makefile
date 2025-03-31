@@ -1,54 +1,82 @@
-TOPNAME = top 
-NXDC_FILES = constr/top.nxdc 
-INC_PATH ?=  
+# Define different top name
+CLI_TOPNAME = top
+FPGA_TOPNAME = top
+LIGHT_TOPNAME = light
 
+# Define differenet nxdc files
+FPGA_NXDC_FILES = constr/top.nxdc
+LIGHT_NXDC_FILES = constr/light.nxdc
+
+# Verilator config
 VERILATOR = verilator
 VERILATOR_CFLAGS += -MMD --build -cc  \
 				-O3 --x-assign fast --trace --x-initial fast --noassert
 
+# Build directories
 BUILD_DIR = ./build
-OBJ_DIR = $(BUILD_DIR)/obj_dir
-BIN = $(BUILD_DIR)/$(TOPNAME)
 
-default: $(BIN)
+# Auto bind
+FPGA_AUTO_BIND = $(BUILD_DIR)/auto_bind_fpga.cpp
+LIGHT_AUTO_BIND = $(BUILD_DIR)/auto_bind_light.cpp
 
-$(shell mkdir -p $(BUILD_DIR))
+$(FPGA_AUTO_BIND): $(FPGA_NXDC_FILES)
+	@python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
 
-# constraint file
-SRC_AUTO_BIND = $(abspath $(BUILD_DIR)/auto_bind.cpp)
-$(SRC_AUTO_BIND): $(NXDC_FILES)
-	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
+$(LIGHT_AUTO_BIND): $(LIGHT_NXDC_FILES)
+	@python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
 
-# project source
-VSRCS = $(shell find $(abspath ./vsrc) -name "*.v")
-CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
-CSRCS += $(SRC_AUTO_BIND)
+# Source files
+FPGA_CSRC = $(abspath ./csrc/fpga.cpp) $(FPGA_AUTO_BIND)
+CLI_CSRC = $(abspath ./csrc/cli.cpp)
+LIGHT_CSRC = $(abspath ./csrc/light.cpp) $(LIGHT_AUTO_BIND)
 
-# rules for NVBoard
+FPGA_VSRCS = $(abspath ./vsrc/top.v)
+CLI_VSRCS = $(abspath ./vsrc/top.v)
+LIGHT_VSRCS = $(abspath ./vsrc/light.v)
+
+# Rules for NVBoard
 include $(NVBOARD_HOME)/scripts/nvboard.mk
 
-# rules for verilator
-INCFLAGS = $(addprefix -I, $(INC_PATH)) 
+# Rules for verilator
+INC_PATH ?=
+INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) 
+LDFLAGS += -lSDL2 -lSDL2_image -lSDL2_ttf
 
-$(BIN):$(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
-	@rm -rf $(OBJ_DIR)
-	$(VERILATOR) $(VERILATOR_CFLAGS)\
-			--top-module $(TOPNAME) $^ \
-			$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
-			--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN))
+# Create build directory
+$(shell mkdir -p $(BUILD_DIR))
+# Function to build a specific target
 
-sim: $(BIN) 
+define BUILD_TARGET
+$(1)_OBJ_DIR = $(BUILD_DIR)/$(1)_obj_dir
+$(1)_BIN = $(BUILD_DIR)/$(1)
+
+$$($(1)_BIN): $$($(1)_VSRCS) $(2) $(NVBOARD_ARCHIVE)
+	@rm -rf $$
+	$(VERILATOR) $(VERILATOR_CFLAGS) \
+        --top-module $($(1)_TOPNAME) \
+        $$(abspath $$($(1)_VSRCS)) $$(abspath $(2)) $$(abspath $(NVBOARD_ARCHIVE)) \
+        $(addprefix -CFLAGS , $(CXXFLAGS) -DTOP_NAME="\"V$($(1)_TOPNAME)\"") \
+        $(addprefix -LDFLAGS , $(LDFLAGS)) \
+        --Mdir $$($(1)_OBJ_DIR) --exe -o $$(abspath $$($(1)_BIN))
+
+.PHONY: $(1)_top
+$(1)_top: $$($(1)_BIN)
+endef
+
+sim: FPGA_top CLI_top LIGHT_top 
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 
-include ../Makefile
+# Build targets
+$(eval $(call BUILD_TARGET,FPGA,$(FPGA_CSRC)))
+$(eval $(call BUILD_TARGET,CLI,$(CLI_CSRC)))
+$(eval $(call BUILD_TARGET,LIGHT,$(LIGHT_CSRC)))
 
-all: default
+# Default target
+default: FPGA_top CLI_top LIGHT_top
 
-run: sim
-	@$^
-
+# Clean
 clean:
 	rm -rf $(BUILD_DIR)
 
-.PHONY: default all clean run
+.PHONY: default clean sim FPGA_top CLI_top LIGHT_top
