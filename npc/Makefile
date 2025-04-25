@@ -67,7 +67,7 @@ sim: FPGA_top CLI_top LIGHT_top
 
 # Build targets
 $(eval $(call BUILD_TARGET,FPGA))
-$(eval $(call BUILD_TARGET,CLI,))
+$(eval $(call BUILD_TARGET,CLI))
 $(eval $(call BUILD_TARGET,LIGHT))
 
 # Default target
