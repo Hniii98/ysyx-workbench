@@ -38,7 +38,7 @@
 #ifdef CONFIG_LONGEXPR
 	#define MAX_TOKENS 65536+1
 #else
-	#define MAX_TOKENS 32
+	#define MAX_TOKENS 100 
 #endif
 
 typedef MUXDEF(CONFIG_ISA64, uint64_t, uint32_t) word_t;

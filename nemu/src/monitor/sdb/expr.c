@@ -122,12 +122,12 @@ static bool make_token(char *e) {
     for (i = 0; i < NR_REGEX; i++) {
       if (regexec(&re[i], e + position, 1, &pmatch, 0) == 0 &&
           pmatch.rm_so == 0) {
-        char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
-
+		/*
+        char *substr_start = e + position;
         Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s", i,
             rules[i].regex, position, substr_len, substr_len, substr_start);
-
+		*/	
         position += substr_len;
 
         /* TODO: Now a new token is recognized with rules[i]. Add codes
@@ -223,6 +223,7 @@ static struct rank {
 
 static int ranks_map[MAX_OP_TYPE] = {0};
 static int aritys_map[MAX_OP_TYPE] = {0};
+
 /* check whether given expresionn consist of paired parentheses */
 static bool check_parentheses_match(int left, int right) {
   char stack[MAX_TOKENS] = {}; // simulate stack
@@ -259,8 +260,7 @@ static bool check_exist_parenthesis(int left, int right) {
   return false;
 }
 
-/*check whether expression surrounded by a pair of removable parentheses and
- * whether expression computable*/
+/*check whether expression surrounded by a pair of removable parentheses and  whether expression computable*/
 static bool check_parentheses(int left, int right) {
   /* don't exist any parentheses */
   if (check_exist_parenthesis(left, right) == false) {
@@ -323,9 +323,10 @@ static bool check_token_isop(int index) {
 /* return the index of main operator, index start from zero */
 static int find_mainop(int left, int right) {
   /* in this if branch, expression won't surround by a pair of matched
-   * parentheses so, only when bracket depth == 0 we try to update it example:
-   * (a+b)*c
-   * if we record op when op_idx=-1 and don't care bracket_depth, the maipop
+   * parentheses so, only when bracket depth == 0 we try to update it 
+   * example:
+   *			(a+b)*c
+   * if we record op when op_idx is default value and don't care bracket_depth, the maipop
    * turn out to be '+'by judging priority, which is wrong answer.
    */
 
@@ -338,7 +339,7 @@ static int find_mainop(int left, int right) {
     } else if (tokens[i].type == ')') {
       bracket_depth--;
     }
-    /* any op in brack won't be the mainop, no matter what priority it is */
+    /* any op inside brack won't be the mainop, no matter what priority it is */
     if (check_token_isop(i) && bracket_depth == 0) {
       /* first time meet op or op priority smaller or equal than previous
        * recorded op, update op index.
@@ -395,7 +396,7 @@ word_t eval(int left, int right, EvalStatus *status) {
   else if (check_parentheses(left, right) == true) {
     return eval(left + 1, right - 1, status);
   }
-  /* not surrounded or surrouned but not matched */
+  /* not surrounded or surrounded but not a pair */
   else if (computable == true) {
     int op_idx = find_mainop(left, right);
     /* Binary operand */
@@ -450,7 +451,7 @@ word_t eval(int left, int right, EvalStatus *status) {
     *status = EVAL_ILLEGAL_ARITY;
     return -1;
   }
-  /* Not surrounded by parentheses and they don't match up */
+  /* Not surrounded by parentheses, meanwhile they don't match up */
   *status = EVAL_ILLEGAL_PARENTHESES;
   return -1;
 }
@@ -496,7 +497,7 @@ word_t expr(char *e, bool *success) {
     *success = false;
     return -1;
   case EVAL_ILLEGAL_OP:
-    printf("Exists undefined operator, which is not one of +,-,*,/\n ");
+    printf("Exists undefined operator\n ");
     *success = false;
     return -1;
   case EVAL_DIV_ZERO:
@@ -508,7 +509,7 @@ word_t expr(char *e, bool *success) {
     *success = false;
     return -1;
   case EVAL_ILLEGAL_ARITY:
-    printf("Token arity illegal\n");
+    printf("Token arity illegal, check if missing op\n");
     *success = false;
     return -1;
   case EVAL_ILLEGAL_REGNAME:
