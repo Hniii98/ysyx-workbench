@@ -45,10 +45,27 @@ static void gen(char c){
 }
 
 static void gen_num(){
+	/*
 	char num = '0' + choose(10); // generate '0' to '9'
 	if(num == '0' && buf_idx > 0 &&  buf[buf_idx-1] == '/') num = '1'; // avoid / followed with 0 
-
-	gen(num);
+	*/
+	switch(choose(3)){
+		case 0: 
+			/* gen single digits */
+			gen('0'+choose(10));
+			break;
+		case 1:
+			/* gen tens digits */
+			gen('1'+choose(9)); // avoid considerd as otcal num
+			gen('0'+choose(10));
+			break;
+		case 2:
+			/* gen hundreds digits */
+			gen('1'+choose(9));
+			gen('0'+choose(10));
+			gen('0'+choose(10));
+			break;
+	}			
 	gen('u'); // make sure expr computes in unsigned way.
 }
 
