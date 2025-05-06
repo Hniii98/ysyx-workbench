@@ -64,10 +64,11 @@ static struct rule {
     {"\\*", '*'},                       // times
     {"/", '/'},                         // division
     {"&&", TK_LOGICAND},                // logical and
-    {"0[Xx][[:digit:]]+", TK_HEXNUM},   // hexical number
+    {"0[Xx][[:xdigit:]]+", TK_HEXNUM},   // hexical number
     {"[[:digit:]]+[uU]", TK_uDECNUM},   // unsigned decial number
     {"[[:digit:]]+", TK_DECNUM},        // decial number
-    {"\\$[\\$[:alnum:]]+", TK_REGNAME}, // reg name
+    //{"\\$[\\$[:alnum:]]+", TK_REGNAME}, // reg name
+    {"\\$[[:alnum:]]+", TK_REGNAME}, // reg name
     {"\\(", '('},                       // left bracket
     {"\\)", ')'},                       // right bracket
 };
@@ -136,58 +137,58 @@ static bool make_token(char *e) {
          */
 
         switch (rules[i].token_type) {
-        /* Some token only need it's type */
-        case '=':
-        /* PASS THROUGH */
-        case '+':
-        /* PASS THROUGH */
-        case '-':
-        /* PASS THROUGH */
-        case '*':
-        /* PASS THROUGH */
-        case '/':
-        /* PASS THROUGH */
-        case TK_NEQUAL:
-        /* PASS THROUGH */
-        case TK_LOGICAND:
-        /* PASS THROUGH */
-        case '(':
-        /* PASS THROUGH */
-        case ')':
-          tokens[nr_token].type = rules[i].token_type;
-          nr_token++;
-          break;
+			/* Some token only need it's type */
+			case '=':
+			/* PASS THROUGH */
+			case '+':
+			/* PASS THROUGH */
+			case '-':
+			/* PASS THROUGH */
+			case '*':
+			/* PASS THROUGH */
+			case '/':
+			/* PASS THROUGH */
+			case TK_NEQUAL:
+			/* PASS THROUGH */
+			case TK_LOGICAND:
+			/* PASS THROUGH */
+			case '(':
+			/* PASS THROUGH */
+			case ')':
+			  tokens[nr_token].type = rules[i].token_type;
+			  nr_token++;
+			  break;
 
-        /* Some token need record it's value*/
-        case TK_DECNUM:
-          /* PASS THROUGH */
-        case TK_HEXNUM:
-          /* PASS THROUGH */
-        case TK_uDECNUM:
-          /* PASS THROUGH */
-        case TK_REGNAME:
-          tokens[nr_token].type = rules[i].token_type;
-          if (substr_len >= 32) {
-            /* src length greater or equal to des, manual truncate token and
-             * append '\0' */
-            strncpy(tokens[nr_token].str, e + position - substr_len,
-                    31); // May lose token's suffix,
-            tokens[nr_token].str[31] = '\0';
-            Log("The length of numeric token is %d, over maxsize 32, truncated "
-                "value are: %s",
-                substr_len, tokens[nr_token].str);
+			/* Some token need record it's value*/
+			case TK_DECNUM:
+			  /* PASS THROUGH */
+			case TK_HEXNUM:
+			  /* PASS THROUGH */
+			case TK_uDECNUM:
+			  /* PASS THROUGH */
+			case TK_REGNAME:
+			  tokens[nr_token].type = rules[i].token_type;
+			  if (substr_len >= 32) {
+				/* src length greater or equal to des, manual truncate token and
+				 * append '\0' */
+				strncpy(tokens[nr_token].str, e + position - substr_len,
+						31); // May lose token's suffix,
+				tokens[nr_token].str[31] = '\0';
+				Log("The length of numeric token is %d, over maxsize 32, truncated "
+					"value are: %s",
+					substr_len, tokens[nr_token].str);
 
-          } else {
-            strncpy(tokens[nr_token].str, e + position - substr_len, substr_len);
-          }
-          nr_token++;
-          break;
+			  } else {
+				strncpy(tokens[nr_token].str, e + position - substr_len, substr_len);
+			  }
+			  nr_token++;
+			  break;
 
-        /* Token like space don't need any operation */
-        default:
-          break;
-        }
-        break; // match once
+			/* Token like space don't need any operation */
+			default:
+			  break;
+		}
+		break; // match once
       }
     }
 
