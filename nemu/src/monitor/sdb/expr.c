@@ -110,7 +110,9 @@ static bool make_token(char *e) {
   int i;
   regmatch_t pmatch;
 
+  /* inital */
   nr_token = 0;
+  memset(&tokens, 0 , sizeof(tokens));
 
   while (e[position] != '\0') {
     /* Token numbers over MAX_TOKENS_LEN, panic */
