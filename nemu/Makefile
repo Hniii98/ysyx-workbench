@@ -59,3 +59,17 @@ else
 # Include rules to build NEMU
 include $(NEMU_HOME)/scripts/native.mk
 endif
+
+# compute code lines in .c/.h files including empty lines
+ORILINES := 16855 # Total line in initial repo
+CURLINES := $(shell fdfind -e c -e h | xargs wc -l | tail -n 1 | awk '{print $$1}')
+
+
+# compute code lines in .c/.h files excluding empty lines
+CURLINES_NEMPTY := $(shell fdfind -e c -e h | xargs awk 'NF {cnt++} END {print cnt}')
+
+count:
+	@echo "Original   lines:  $(ORILINES)"
+	@echo "Current    lines:  $(CURLINES)"
+	@echo "Diff       lines:  $(shell expr $(CURLINES) - $(ORILINES))"
+	@echo "Current  lines(w/o empty line):  $(CURLINES_NEMPTY)"

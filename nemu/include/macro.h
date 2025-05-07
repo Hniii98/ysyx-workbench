@@ -22,8 +22,14 @@
 #define str_temp(x) #x
 #define str(x) str_temp(x)
 
+/* 
+ * STRLEN 宏在编译器就可确定长度,但是它只能用于字符串字面量如“abcd”,
+ * 传入其他的变量会导致数组错误，如char *类型的变量返回的是指针大小
+ * 再减1,而飞数组的长度。
+ */
+
 // strlen() for string constant
-#define STRLEN(CONST_STR) (sizeof(CONST_STR) - 1)
+#define STRLEN(CONST_STR) (sizeof(CONST_STR) - 1) 
 
 // calculate the length of an array
 #define ARRLEN(arr) (int)(sizeof(arr) / sizeof(arr[0]))

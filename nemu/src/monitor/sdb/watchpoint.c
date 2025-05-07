@@ -51,7 +51,7 @@ WP *new_wp() {
   return tmp;
 }
 
-// Free wp, and join it to free_ list 
+/* Free wp, and join it to free_ list */
 void free_wp(WP *wp) {
   //free_ list empty, wp become the first node 
   if (!free_) {
@@ -155,6 +155,7 @@ void scan_and_difftest() {
       nemu_state.state = NEMU_STOP;
       return;
     }
-    itr++;
+    //itr++;
+	itr = itr->next;
   }
 }

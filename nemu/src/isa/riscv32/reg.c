@@ -35,14 +35,28 @@ void isa_reg_display() {
 	}
 }
 
+
 word_t isa_reg_str2val(const char *s, bool *success) {
+  /* const char * s receive a reg name without the prefix '$' */
 	/* given s is empty */
 	if(strlen(s) == 0){
 		*success = false;
 		return -1;
 	}
+	
+	/* pc isn't the general purpose register */
+	if(strcmp(s, "pc") == 0){
+		*success = true;
+		return cpu.pc;
+	}
+	/* input "$0" will turn out to be 0 without prefix */
+	else if(strcmp(s, "0") == 0){
+		*success = true;
+		return cpu.gpr[0];
+	}
 
-	for(int idx = 0; idx < NR_REGS; idx++){
+	/* compare s with regs array from idx 1 to NR_REGS-1 */
+	for(int idx = 1; idx < NR_REGS; idx++){
 		if(strcmp(s, regs[idx]) == 0){
 			*success = true;
 			return cpu.gpr[idx];
