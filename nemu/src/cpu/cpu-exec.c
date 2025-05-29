@@ -41,7 +41,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 
 #ifdef CONFIG_WATCHPOINT
   // scan and difftest watchpoint
-  scan_and_difftest(); 
+  watchpoint_difftest(); 
 #endif
 }
 
@@ -62,7 +62,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
   int ilen_max = MUXDEF(CONFIG_ISA_x86, 8, 4);
   int space_len = ilen_max - ilen;
   if (space_len < 0) space_len = 0;
-  space_len = space_len * 3 + 1;
+  space_len = space_len * 3 + 1; // fill blank at rear
   memset(p, ' ', space_len);
   p += space_len;
 
@@ -89,7 +89,7 @@ static void execute(uint64_t n) {
 
 static void statistic() {
   IFNDEF(CONFIG_TARGET_AM, setlocale(LC_NUMERIC, ""));
-#define NUMBERIC_FMT MUXDEF(CONFIG_TARGET_AM, "%", "%'") PRIu64  // ?
+#define NUMBERIC_FMT MUXDEF(CONFIG_TARGET_AM, "%", "%'") PRIu64  
   Log("host time spent = " NUMBERIC_FMT " us", g_timer);
   Log("total guest instructions = " NUMBERIC_FMT, g_nr_guest_inst);
   if (g_timer > 0) Log("simulation frequency = " NUMBERIC_FMT " inst/s", g_nr_guest_inst * 1000000 / g_timer);

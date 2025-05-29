@@ -140,7 +140,7 @@ void wp_in_head_display(){
 }
 		
 
-void scan_and_difftest() {
+void watchpoint_difftest() {
   WP *itr = head;
 
   while (itr) {
