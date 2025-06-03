@@ -16,6 +16,7 @@
 #include <cpu/cpu.h>
 #include <cpu/decode.h>
 #include <cpu/difftest.h>
+#include <trace.h>
 #include <locale.h>
 
 /* The assembly code of instructions executed is only output to the screen
@@ -99,6 +100,9 @@ static void statistic() {
 void assert_fail_msg() {
   isa_reg_display();
   statistic();
+  #ifdef CONFIG_IRINGTRACE
+    iringbuf_display();
+  #endif 
 }
 
 /* Simulate how the CPU works. */

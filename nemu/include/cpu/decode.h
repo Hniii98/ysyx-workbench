@@ -18,6 +18,8 @@
 
 #include <isa.h>
 
+
+
 typedef struct Decode {
   vaddr_t pc;
   vaddr_t snpc; // static next pc
@@ -25,6 +27,7 @@ typedef struct Decode {
   ISADecodeInfo isa;
   IFDEF(CONFIG_ITRACE, char logbuf[128]);
 } Decode;
+
 
 // --- pattern matching mechanism ---
 __attribute__((always_inline))
