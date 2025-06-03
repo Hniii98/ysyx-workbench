@@ -21,7 +21,13 @@ void iringbuf_write_once(uint32_t inst, vaddr_t pc);
 void iringbuf_display();
 #endif
 
+#ifdef CONFIG_MTRACE
+  void mwrite_trace(vaddr_t addr, int len, word_t data);
+  void mread_trace(vaddr_t addr, int len);
+#endif
+
 
 #endif
+
 #endif
 

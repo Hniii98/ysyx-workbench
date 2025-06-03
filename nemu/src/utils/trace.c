@@ -42,9 +42,34 @@
             }
         }
     }
+#endif
 
-    
-    
+
+#ifdef CONFIG_MTRACE
+
+
+bool mtrace_enable(vaddr_t addr){
+    return MUXDEF(CONFIG_MTRACE, (addr >= CONFIG_MTRACE_START) && 
+        (addr <= CONFIG_MTRACE_END), false);
+}
+
+void mwrite_trace(vaddr_t addr, int len, word_t data){
+    if(mtrace_enable(addr)){
+        printf("nemu: write %d bytes of 0x%x to memory at " FMT_PADDR "\n",
+            len,
+            data,
+            addr);
+    }
+}
+
+void mread_trace(vaddr_t addr, int len){
+    if(mtrace_enable(addr)){
+        printf("nemu: read %d bytes of memory at " FMT_PADDR "\n",
+            len,
+            addr);
+    }
+}
+
 #endif
 #endif
 

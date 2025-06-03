@@ -159,8 +159,25 @@ config ITRACE_COND
   default "true"
 
 config IRINGTRACE
+  depends on TARGET_NATIVE_ELF && ENGINE_INTERPRETER
   bool "Enable instruction ring buffer"
   default n
+
+config MTRACE
+  depends on TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+  bool "Enable memory tracer"
+  default n
+
+config MTRACE_START 
+  depends on MTRACE 
+  hex "When tracing is enable (unit: address of physical memory)" 
+  default 0x00000000
+  
+config MTRACE_END
+  depends on MTRACE
+  hex "When tracing is disable (unit: address of physical memory)"
+  default 0x87ffffff
+  range 0x00000000 0xFFFFFFFF
 
 config DIFFTEST
   depends on TARGET_NATIVE_ELF
