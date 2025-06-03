@@ -54,6 +54,7 @@ uint64_t get_time();
 #define ANSI_BG_WHITE   "\33[1;47m"
 #define ANSI_NONE       "\33[0m"
 
+/* ANSI_NONE 确保每次fmt生效完后流处理恢复默认设置 */
 #define ANSI_FMT(str, fmt) fmt str ANSI_NONE
 
 #define log_write(...) IFDEF(CONFIG_TARGET_NATIVE_ELF, \
