@@ -23,9 +23,9 @@
 #define str(x) str_temp(x)
 
 /* 
- * STRLEN 宏在编译器就可确定长度,但是它只能用于字符串字面量如“abcd”,
+ * STRLEN 宏在编译期就可确定长度,但是它只能用于字符串字面量如“abcd”,
  * 传入其他的变量会导致数组错误，如char *类型的变量返回的是指针大小
- * 再减1,而飞数组的长度。
+ * 再减1,而非数组的长度。
  */
 
 // strlen() for string constant

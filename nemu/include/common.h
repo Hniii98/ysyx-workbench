@@ -35,8 +35,9 @@
 #define PMEM64 1
 #endif
 
+
 #ifdef CONFIG_LONGEXPR
-	#define MAX_TOKENS 65536+1
+	#define MAX_TOKENS 65536+1 /* To support expression evaluation test*/
 #else
 	#define MAX_TOKENS 100 
 #endif
