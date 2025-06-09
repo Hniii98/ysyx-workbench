@@ -74,6 +74,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
 #else
   p[0] = '\0'; // the upstream llvm does not support loongarch32r
 #endif
+
 #endif
 }
 
@@ -103,6 +104,11 @@ void assert_fail_msg() {
   #ifdef CONFIG_IRINGTRACE
     iringbuf_display();
   #endif 
+
+  #ifdef CONFIG_FTRACE
+    ftracedata_display();
+    free_ftracetab();
+  #endif
 }
 
 /* Simulate how the CPU works. */
@@ -132,6 +138,12 @@ void cpu_exec(uint64_t n) {
             ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
           nemu_state.halt_pc);
       // fall through
-    case NEMU_QUIT: statistic();
+    case NEMU_QUIT: 
+      statistic();
+      #ifdef CONFIG_FTRACE
+        ftracedata_display();
+        free_ftracetab();
+      #endif
+
   }
 }

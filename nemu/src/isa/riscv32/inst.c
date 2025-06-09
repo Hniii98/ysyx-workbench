@@ -83,7 +83,14 @@ static int decode_exec(Decode *s) {
 
   /* TYPE_I */
   INSTPAT("??????? ????? ????? 000 ????? 11001 11", jalr  , I, 
-	  R(rd) = s->pc + 4; s->dnpc = (src1 + imm) & ~1 );
+	  R(rd) = s->pc + 4; 
+    s->dnpc = (src1 + imm) & ~1 
+     #ifdef CONFIG_FTRACE
+      ; // close previous code
+      void isa_unconjump_trace(vaddr_t pc, int rd, vaddr_t target);
+      isa_unconjump_trace(s->pc, rd, s->dnpc) // marco INSTPAT_MATCH add ; for us
+    #endif
+  );
 
   /*  parameter len in Mr means bytes, while in SEXT means bits */
   /* using SEXT marco to implement sign-extend */
@@ -123,8 +130,15 @@ static int decode_exec(Decode *s) {
 
   /* TYPE_J */
   INSTPAT("??????? ????? ????? ??? ????? 11011 11", jal   , J, 
-    R(rd) = s->pc + 4; s->dnpc = s->pc + imm);
-
+    R(rd) = s->pc + 4; 
+    s->dnpc = s->pc + imm 
+    #ifdef CONFIG_FTRACE
+      ; // close previous code
+      void isa_unconjump_trace(vaddr_t pc, int rd, vaddr_t target);
+      isa_unconjump_trace(s->pc, rd, s->dnpc)
+    #endif
+  );
+  
   /* TYPE_R */
   INSTPAT("0000000 ????? ????? 000 ????? 01100 11", add   , R, R(rd) = src1 + src2); 
   INSTPAT("0100000 ????? ????? 000 ????? 01100 11", sub   , R, R(rd) = src1 - src2); 
@@ -180,3 +194,24 @@ int isa_exec_once(Decode *s) {
   #endif 
   return decode_exec(s);
 }
+
+#ifdef CONFIG_FTRACE
+#include <trace.h>
+
+/* isa unconditional jump target trace */
+void isa_unconjump_trace(vaddr_t pc, int rd, vaddr_t target){
+  /*  standard calling convention 
+      uses 'x1', as well as rd = 1, as return address reg.
+      uses 'x5', as well as rd = 5, as an alternate link register. 
+      when we do not need back to this funciton , rd = 0, jump will
+      be a return. */
+  if(rd == 0){
+    /* rd = 0, this jump is a return .*/
+    ftracedata_write_once(pc, ft_ret, target);
+  }
+  else{
+    /* else, this jump is a funcion call. */
+    ftracedata_write_once(pc, ft_call, target);
+  }
+}
+#endif

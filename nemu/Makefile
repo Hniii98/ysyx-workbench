@@ -61,7 +61,7 @@ include $(NEMU_HOME)/scripts/native.mk
 endif
 
 # compute code lines in .c/.h files including empty lines
-ORILINES := 16855 # Total line in initial repo
+ORILINES := 16855 # Hardcode the total lines in initial repo
 CURLINES := $(shell fdfind -e c -e h | xargs wc -l | tail -n 1 | awk '{print $$1}')
 
 
