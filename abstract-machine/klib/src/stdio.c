@@ -40,16 +40,18 @@ int sprintf(char *out, const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
 
-  char c;
-  char *s = NULL;
+
+  char *s;
   int d;
   
-  while(*fmt){
+  while(*fmt != '\0'){
 
     switch (*fmt){
       case '%' : /* format character  */ 
         fmt++; // we need the next flag
+
         if(*fmt == 's'){ /* string */
+          s = NULL;
           s = va_arg(ap, char *);
           ptr = mempcpy(ptr, s, strlen(s));  
         } 
@@ -63,12 +65,12 @@ int sprintf(char *out, const char *fmt, ...) {
           /* error occur, invalid flag, return a negative number*/
           return -1;
         }
+
         break;
 
       default : /* normal character */
-        c = (char)va_arg(ap, int); /*va_arg only support fully promoted types*/
-        ptr = mempcpy(ptr, &c, 1);
-        
+        *ptr++ = *fmt;  // copy directly
+        break;
     }
 
     fmt++; // process next character
@@ -79,6 +81,7 @@ int sprintf(char *out, const char *fmt, ...) {
   *ptr = '\0';
 
   va_end(ap);
+
   return strlen(out);
   
 }
