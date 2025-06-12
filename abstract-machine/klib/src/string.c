@@ -9,7 +9,9 @@ void *memcpy(void *out, const void *in, size_t n);
 void *memset(void *s, int c, size_t n);
 
 size_t strlen(const char *s) {
-  size_t len =  0;
+  
+  if (s == NULL) return 0; 
+  size_t len =  0; 
   const char *ptr = s;
   while(*ptr != '\0'){
     len++;
