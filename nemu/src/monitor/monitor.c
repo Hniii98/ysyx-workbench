@@ -13,6 +13,8 @@
  ***************************************************************************************/ 
 #include <isa.h> 
 #include <memory/paddr.h> 
+#include <trace.h>
+
 void init_rand(); 
 void init_log(const char *log_file);
 void init_mem();
@@ -30,7 +32,9 @@ static void welcome() {
   Log("Build time: %s, %s", __TIME__, __DATE__);
   printf("Welcome to %s-NEMU!\n", ANSI_FMT(str(__GUEST_ISA__), ANSI_FG_YELLOW ANSI_BG_RED));
   printf("For help, type \"help\"\n");
- 
+  #ifdef CONFIG_MTARCE
+    Log("Instructions are recorded after excution, so memory trace appears before them");
+  #endif
 }
 
 #ifndef CONFIG_TARGET_AM
@@ -118,6 +122,9 @@ void init_monitor(int argc, char *argv[]) {
   /* Intialize function trace*/
   IFDEF(CONFIG_FTRACE, init_ftrace(elf_file));
 
+  /*Initialize instruction trace ring buffer */
+  IFDEF(CONFIG_IRINGTRACE, init_iringbuf());
+  
   /* Initialize devices. */
   IFDEF(CONFIG_DEVICE, init_device());
 

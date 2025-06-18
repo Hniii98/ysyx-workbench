@@ -146,7 +146,7 @@ config TRACE_START
 config TRACE_END
   depends on TRACE
   int "When tracing is disabled (unit: number of instructions)"
-  default 10000
+  default 20000
 
 config ITRACE
   depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
@@ -159,12 +159,12 @@ config ITRACE_COND
   default "true"
 
 config IRINGTRACE
-  depends on TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+  depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
   bool "Enable instruction tracer ring buffer"
   default n
 
 config MTRACE
-  depends on TARCE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+  depends on  TRACE 
   bool "Enable memory tracer"
   default n
 
@@ -172,17 +172,20 @@ config MTRACE_START
   depends on MTRACE 
   hex "When tracing is enable (unit: address of physical memory)" 
   default 0x00000000
+  range 0x00000000 0xFFFFFFFF
   
 config MTRACE_END
   depends on MTRACE
   hex "When tracing is disable (unit: address of physical memory)"
-  default 0x87ffffff
+  default 0xFFFFFFFF
   range 0x00000000 0xFFFFFFFF
 
+
 config FTRACE
-  depends on TARCE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+  depends on  TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
   bool "Enable function tracer"
   default n
+
 
 config DIFFTEST
   depends on TARGET_NATIVE_ELF
