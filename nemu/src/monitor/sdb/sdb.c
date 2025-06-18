@@ -75,7 +75,7 @@ static struct {
     {"x", "Display N times 4 bytes start from memory position EXP", cmd_x},
     {"p", "Evaluate a given expression", cmd_p},
     {"d", "Delete watch point no in using", cmd_d},
-	{"w", "Insert a watchpoint", cmd_w},
+	  {"w", "Insert a watchpoint", cmd_w},
     /* TODO: Add more commands */
 
 };
@@ -226,13 +226,6 @@ static int cmd_info(char *args) {
   return 0;
 }
 
-  /* /1* first argument behind command *1/ */
-  /* char *arg = strtok(NULL, " "); */
-  /* if (!arg) { */
-  /*   printf("Empty argument\n"); */
-  /*   return -1; */
-  /* } */
-/* } */
 
 static int cmd_d(char *args) {
   char *arg = strtok(NULL, " ");

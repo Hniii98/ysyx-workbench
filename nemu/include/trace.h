@@ -4,10 +4,14 @@
 #include <common.h>
 #include <macro.h>
 #include <elf.h>
+#include <fcntl.h>
+#include <unistd.h>
 
-#ifndef CONFIG_TARGET_AM
+
+
 /* Instruction trace */
 #ifdef CONFIG_IRINGTRACE
+
 #define RBUFSIZE 16
 
 typedef struct 
@@ -16,35 +20,34 @@ typedef struct
   size_t wptr;
 }IRingBuf;
 
-extern IRingBuf iringbuf;
-
-
+void init_iringbuf();
 void iringbuf_write_once(uint32_t inst, vaddr_t pc);
 void iringbuf_display();
+
 #endif
 
 #ifdef CONFIG_MTRACE
-  void mwrite_trace(vaddr_t addr, int len, word_t data);
-  void mread_trace(vaddr_t addr, int len);
+  bool mtrace_enable(paddr_t addr);
+  void mwrite_trace(paddr_t addr, int len, word_t data);
+  void mread_trace(paddr_t addr, int len);
 #endif
 
 #ifdef CONFIG_FTRACE
   
-  #define MAX_CALLDEPTH 1024
+  #define MAX_CALLDEPTH 10000
   
   
-  typedef  MUXDEF(CONFIS_ISA64, Elf64_Ehdr, Elf32_Ehdr) Ehdr;
-  typedef  MUXDEF(CONFIS_ISA64, Elf64_Shdr, Elf32_Shdr) Shdr;
+  typedef  MUXDEF(CONFIG_ISA64, Elf64_Ehdr, Elf32_Ehdr) Ehdr;
+  typedef  MUXDEF(CONFIG_ISA64, Elf64_Shdr, Elf32_Shdr) Shdr;
   typedef  MUXDEF(CONFIG_ISA64, Elf64_Sym,  Elf32_Sym ) Sym;
+  
+  #define ST_TYPE(X) MUXDEF(CONFIG_ISA64, ELF64_ST_TYPE(X), ELF32_ST_TYPE(X))
 
   typedef struct{
     Sym *symtab;
     char *strtab;
     word_t symcnt;
   }FTraceTab;
-  
-  extern FTraceTab g_ftracetab;
-
   
   enum {ft_call = 0, ft_ret, };
 
@@ -63,5 +66,4 @@ void iringbuf_display();
 
 #endif
 
-#endif
 

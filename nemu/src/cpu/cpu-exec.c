@@ -51,6 +51,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
   s->snpc = pc;
   isa_exec_once(s);
   cpu.pc = s->dnpc;
+
 #ifdef CONFIG_ITRACE
   char *p = s->logbuf;
   p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
@@ -74,8 +75,12 @@ static void exec_once(Decode *s, vaddr_t pc) {
 #else
   p[0] = '\0'; // the upstream llvm does not support loongarch32r
 #endif
-
 #endif
+
+#ifdef CONFIG_IRINGTRACE
+  iringbuf_write_once(s->isa.inst.val, pc);
+#endif
+
 }
 
 static void execute(uint64_t n) {
@@ -83,7 +88,7 @@ static void execute(uint64_t n) {
   for (;n > 0; n --) {
     exec_once(&s, cpu.pc);
     g_nr_guest_inst ++;
-    trace_and_difftest(&s, cpu.pc);
+    trace_and_difftest(&s, cpu.pc); 
     if (nemu_state.state != NEMU_RUNNING) break;
     IFDEF(CONFIG_DEVICE, device_update());
   }
@@ -101,9 +106,8 @@ static void statistic() {
 void assert_fail_msg() {
   isa_reg_display();
   statistic();
-  #ifdef CONFIG_IRINGTRACE
-    iringbuf_display();
-  #endif 
+
+  IFDEF(CONFIG_IRINGTRACE, iringbuf_display()); 
 
   #ifdef CONFIG_FTRACE
     ftracedata_display();
