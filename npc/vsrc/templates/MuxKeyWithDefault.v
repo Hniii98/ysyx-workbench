@@ -1,5 +1,11 @@
 // 带默认值的选择器模板
-module MuxKeyWithDefault #(NR_KEY = 2, KEY_LEN = 1, DATA_LEN = 1) (
+`ifndef _MUXKEYWITHDEFAULT_V_
+`define _MUXKEYWITHDEFAULT_V_
+module MuxKeyWithDefault #(
+  parameter NR_KEY = 2, 
+  parameter KEY_LEN = 1, 
+  parameter DATA_LEN = 1
+) (
   output [DATA_LEN-1:0] out,
   input [KEY_LEN-1:0] key,
   input [DATA_LEN-1:0] default_out,
@@ -7,3 +13,4 @@ module MuxKeyWithDefault #(NR_KEY = 2, KEY_LEN = 1, DATA_LEN = 1) (
 );
   MuxKeyInternal #(NR_KEY, KEY_LEN, DATA_LEN, 1) i0 (out, key, default_out, lut);
 endmodule
+`endif

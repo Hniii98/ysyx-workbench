@@ -79,5 +79,7 @@ void test_expr_gen(){
 				illegal_num,
 				wa_num);
 	}
+
+	fclose(fp);
 }	
 
