@@ -1,5 +1,12 @@
 // 选择器模板内部实现
-module MuxKeyInternal #(NR_KEY = 2, KEY_LEN = 1, DATA_LEN = 1, HAS_DEFAULT = 0) (
+`ifndef _MUXKEYINTERNAL_V_
+`define _MUXKEYINTERNAL_V_
+module MuxKeyInternal #(
+   parameter NR_KEY = 2,
+  parameter KEY_LEN = 1,
+  parameter DATA_LEN = 1,
+  parameter HAS_DEFAULT = 0  
+) (
   output reg [DATA_LEN-1:0] out,
   input [KEY_LEN-1:0] key,
   input [DATA_LEN-1:0] default_out,
@@ -34,3 +41,5 @@ module MuxKeyInternal #(NR_KEY = 2, KEY_LEN = 1, DATA_LEN = 1, HAS_DEFAULT = 0) 
     else out = (hit ? lut_out : default_out);
   end
 endmodule
+
+`endif

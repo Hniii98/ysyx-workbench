@@ -1,5 +1,9 @@
 // 触发器模板
-module Reg #(WIDTH = 1, RESET_VAL = 0) (
+`ifndef _REG_V_
+`define _REG_V_ 
+module Reg #(
+  parameter WIDTH = 1, 
+  parameter RESET_VAL = 0) (
   input clk,
   input rst,
   input wen,
@@ -11,3 +15,5 @@ module Reg #(WIDTH = 1, RESET_VAL = 0) (
     else if (wen) dout <= din;
   end
 endmodule
+
+`endif
