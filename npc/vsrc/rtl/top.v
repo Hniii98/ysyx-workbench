@@ -36,6 +36,7 @@ module top(
     /* pc output wires */
     wire [31:0] current_pc_wire;
     wire [31:0] static_next_pc_wire;
+    
 
     /* alu output wires */
     wire[31:0] alu_result_wire;
@@ -99,4 +100,6 @@ module top(
     );
     
     assign alu_result = alu_result_wire;
+    assign PC = current_pc_wire;
+    
 endmodule

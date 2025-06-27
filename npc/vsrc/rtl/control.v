@@ -77,12 +77,13 @@ module control(
     /* level two decode unit of I-type instructions */
     wire [6:0] itype_ctrl_signals;
 
-    MuxKeyWithDefault #(1, 2, 7) itype_ctrl_mux (
+    MuxKeyWithDefault #(2, 7, 7) itype_ctrl_mux (
         .out(itype_ctrl_signals),
-        .key(imm_type_wire),
+        .key(opcode),
         .default_out(UNKNOWN_CTRL_SIGN),
         .lut({
-            `I_TYPE, {`PC_FROM_ALU, `REG_WRITABLE, `OPA_FROM_RS1, `OPB_FROM_IMM, `ALU_ADD, `WRITEBACK_FROM_SNPC}
+            7'b110_0111, {`PC_FROM_ALU,    `REG_WRITABLE, `OPA_FROM_RS1, `OPB_FROM_IMM, `ALU_ADD, `WRITEBACK_FROM_SNPC}, // jalr
+            7'b001_0011, {`PC_FROM_SNPC,  `REG_WRITABLE, `OPA_FROM_RS1, `OPB_FROM_IMM, `ALU_ADD, `WRITEBACK_FROM_ALU } // addi
         })
     );
 
