@@ -33,7 +33,7 @@ module alu(
             1'b1, imm
         })
    );
-    
+  
     /* ALU compute logic  */
     MuxKeyWithDefault #(3, 2, 32) alu_logic (
         .out(alu_result),
@@ -46,6 +46,9 @@ module alu(
         })
     );
 
-  
-
+    // always @(*) begin
+    // $display("[debug] PC=%x, imm=%x, muxa=%x, muxb=%x, result=%x, ALUOp=%b", 
+    //     PC, imm, muxa_result_wire, muxb_result_wire, alu_result, ALUOp);
+    // end
+   
 endmodule

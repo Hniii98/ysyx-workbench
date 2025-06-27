@@ -6,6 +6,7 @@ module pc (
     input [31:0] alu_result,   
     output [31:0] PC,          // current PC value
     output [31:0] SNPC // static next pc
+    
 );
 
     reg [31:0] pc_result_reg;         
@@ -36,5 +37,6 @@ module pc (
     assign snpc_result_wire = pc_result_reg + 32'h4; //  combinational logic adder
     assign SNPC = snpc_result_wire;  // for register writeback (e.g., JAL)
     assign PC = pc_result_reg;
+ 
 endmodule
 

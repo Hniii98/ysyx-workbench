@@ -2,7 +2,7 @@
 module top(
     input clk, rst,
     input [31:0] inst,
-    output [31:0] PC,
+    output [31:0] PC, // pc for cpp simulator
     output [31:0] alu_result
 );
 
@@ -48,6 +48,7 @@ module top(
         .alu_result     (alu_result_wire),
         .PC             (current_pc_wire),
         .SNPC           (static_next_pc_wire)
+        
     );
 
     control u_control(
@@ -79,6 +80,17 @@ module top(
         .imm        (immgen_to_muxb_wire)
     );
     
+    always @(posedge clk) begin
+        $display("Current control signals is: %b", {control_to_pc_wire, 
+                                                    control_to_regfiles_wire,
+                                                    control_to_muxa_wire,
+                                                    control_to_muxb_wire,
+                                                    control_to_alu_wire,
+                                                    control_to_writeback_wire});
+
+        $display("[verilog] IMMGEN: inst=%08x ImmType=%b  imm num=%08x  alu result:%h", inst, control_to_immgen_wire, immgen_to_muxb_wire, alu_result_wire);
+    end
+
 
     alu u_alu(
        .data_rs1(regfiles_to_muxa_wire),
@@ -88,7 +100,7 @@ module top(
        .PC(current_pc_wire),
        .imm(immgen_to_muxb_wire),
        .ALUOp(control_to_alu_wire),
-       .alu_result(alu_result) 
+       .alu_result(alu_result_wire) 
     );
     
 
@@ -101,5 +113,6 @@ module top(
     
     assign alu_result = alu_result_wire;
     assign PC = current_pc_wire;
+   
     
 endmodule
