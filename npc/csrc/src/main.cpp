@@ -17,7 +17,7 @@ static Vtop* dut = NULL;
 VerilatedContext* contextp = NULL;
 VerilatedVcdC* tfp = NULL;
 
-uint8_t memory[MSIZE] = {0};
+uint8_t memory[MSIZE];
 
 static const uint32_t builtin_img [] = {
   0x00500093, // addi x1, x0, 5   (x1 = x0 + 5)
@@ -46,19 +46,25 @@ static char* img_file = NULL;
 
 int main(int argc, char** argv){
 
+  memset(memory, 0, sizeof(memory));
   parse_argument(argc, argv);
   load_img();
-  
   sim_init();
   reset(10);
   loop = true;
+  int loop_times = 3;
+ 
 
-while(loop){
-    dut->inst = pmem_read(dut->pc);
-    step_and_dump_wave();
-
-    printf("PC=0x%08X, INST=0x%08X\n", dut->pc, dut->inst);
-}
+  while(loop){
+      printf("-----------------------------------\n");
+    
+      dut->inst = pmem_read(dut->PC);  
+      printf("PC=0x%08X, INST=0x%08X\n", dut->PC, dut->inst);
+      step_and_dump_wave();
+      printf("[debug] dut->rst = %d, dut->PC = 0x%08X\n", dut->rst, dut->PC);
+      printf("-----------------------------------\n");
+    
+  }
 
   sim_exit();
 
@@ -66,9 +72,10 @@ while(loop){
 }
 
 uint32_t pmem_read(uint32_t addr){
+  assert(addr != 0);
+  printf("[memory read]: reading memory at address 0x%x\n", addr);
   uint8_t *host = memory + addr - BASE; // compute arry index
   return *(uint32_t *)host; // read 4 bytes
- 
 }
 
 static void single_cycle(){
@@ -97,6 +104,7 @@ void step_and_dump_wave() {
 
 void sim_init(){
  
+  printf("Starting sim init...\n");
   contextp = new VerilatedContext;
   contextp->traceEverOn(true);  
   dut = new Vtop{contextp};
@@ -130,6 +138,8 @@ static long load_img(){
   if(img_file == NULL){
     printf("Load built-in img to npc \n");
     memcpy(memory, builtin_img, sizeof(builtin_img));
+    printf("Writing from address: %p...\n", memory);
+    printf("Writing size: %zu...\n", sizeof(builtin_img));
     return sizeof(builtin_img);
   }
   printf("Reading img_file:%s\n", img_file);
