@@ -19,10 +19,10 @@ module control(
     wire [6:0] opcode;
  
     assign opcode = inst[6:0];
-    localparam UNKNOWN_IMM_TYPE =  2'b11; // 11 is unused for now
+    localparam UNKNOWN_IMM_TYPE =  2'b11; // 
 
     /* level one decode of inst */ 
-    MuxKeyWithDefault #(8, 7, 2) imm_type_mux (
+    MuxKeyWithDefault #(9, 7, 2) imm_type_mux (
         .out(imm_type_wire),
         .key(opcode),
         .default_out(UNKNOWN_IMM_TYPE),
@@ -34,7 +34,8 @@ module control(
             7'b000_0011, `I_TYPE,
             7'b001_0011, `I_TYPE,
             7'b000_1111, `I_TYPE,
-            7'b111_0011, `I_TYPE})
+            7'b111_0011, `I_TYPE,
+            7'b010_0011, `S_TYPE})
     );
  
     /*
@@ -87,19 +88,24 @@ module control(
         })
     );
 
+    /* level two decode unit of s-type instructiongs */
+    wire [6:0] stype_ctrl_signals;
+    // hard encode to unharmful empty for sw.
+    assign stype_ctrl_signals = {`PC_FROM_SNPC, `REG_UNWRITABLE, `OPA_FROM_RS1, `OPB_FROM_RS2, `ALU_ADD, `WRITEBACK_FROM_ALU};
 
 
     /* output signal mux */
-    wire [6:0] signals_mux_wire;
+    reg [6:0] signals_mux_wire;
     
-    MuxKeyWithDefault #(3, 2, 7) signals_mux (
+    MuxKeyWithDefault #(4, 2, 7) final_signals_mux (
         .out(signals_mux_wire),
         .key(imm_type_wire),
         .default_out(UNKNOWN_CTRL_SIGN),
         .lut({
             `U_TYPE, utype_ctrl_signals,
             `I_TYPE, itype_ctrl_signals,
-            `J_TYPE, jtype_ctrl_signals
+            `J_TYPE, jtype_ctrl_signals,
+            `S_TYPE, stype_ctrl_signals
         })
     );
 
@@ -108,12 +114,16 @@ module control(
 
    always @(*) begin
     /* ebreak inst */
+    
     if (inst == 32'h00100073) begin
         end_loop();  // DPI-C calling
     end
+   
     /* do nothing */
     end
     
+
+   
 
     
 endmodule

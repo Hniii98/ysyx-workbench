@@ -14,9 +14,11 @@ module immgen(
         .lut({
         `U_TYPE, {inst[31:12], {12{1'b0}}},
         `J_TYPE, {{12{inst[31]}}, inst[19:12], inst[20], inst[30:21], {1'b0}},
+        //`J_TYPE, {{11{inst[31]}}, inst[31], inst[19:12], inst[20], inst[30:21], 1'b0},
+        //`J_TYPE, {{11{inst[31]}}, inst[31], inst[19:12], inst[20], inst[30:21], 1'b0},  
         `I_TYPE, {{21{inst[31]}}, inst[30:20]}
         })
     );
 
-
+   
 endmodule

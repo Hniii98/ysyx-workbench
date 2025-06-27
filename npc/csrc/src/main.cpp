@@ -52,16 +52,16 @@ int main(int argc, char** argv){
   sim_init();
   reset(10);
   loop = true;
-  int loop_times = 3;
+  int loop_times = 12;
  
 
   while(loop){
       printf("-----------------------------------\n");
-    
+     
       dut->inst = pmem_read(dut->PC);  
-      printf("PC=0x%08X, INST=0x%08X\n", dut->PC, dut->inst);
+      
       step_and_dump_wave();
-      printf("[debug] dut->rst = %d, dut->PC = 0x%08X\n", dut->rst, dut->PC);
+      
       printf("-----------------------------------\n");
     
   }
@@ -96,6 +96,7 @@ static void reset(int n){
   dut->rst = 1;
   while(n--) single_cycle();
   dut->rst = 0;
+  
 }
 
 void step_and_dump_wave() {
@@ -121,7 +122,7 @@ void sim_exit() {
     delete contextp;
 }
 
-void end_loop(){
+extern "C" void end_loop() {
   loop = false;
 }
 
