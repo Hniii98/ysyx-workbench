@@ -69,7 +69,7 @@ word_t isa_reg_str2val(const char *s, bool *success) {
 }
 
 /* for testing function isa_reg_str2val */ 
-void test_isa_reg_str2val(){
+void isa_test_reg_str2val(){
 	bool success = true;
 	printf("NR_REGS: %d\n", NR_REGS);
 	for(int idx = 0; idx < NR_REGS; idx++){
