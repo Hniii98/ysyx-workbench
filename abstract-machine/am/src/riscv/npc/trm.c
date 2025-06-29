@@ -18,11 +18,14 @@ void putch(char ch) {
 }
 
 void halt(int code) {
-  asm volatile("ebreak");
+  asm volatile(
+    "mv a0, %0\n\t"
+    "ebreak"
+    :
+    : "r"(code)
+  );
   __builtin_unreachable();
 }
-
-
 
 
 void _trm_init() {

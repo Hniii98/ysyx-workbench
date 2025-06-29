@@ -122,8 +122,10 @@ void sim_exit() {
     delete contextp;
 }
 
-extern "C" void end_loop() {
+extern "C" void end_loop(int code) {
   loop = false;
+  if(code == 0) printf("[NPC] HIT GOOD TRAP!\n");
+  //else          printf("[NPC] HIT BAD TRAP!\n");
 }
 
 

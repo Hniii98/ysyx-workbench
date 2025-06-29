@@ -53,7 +53,7 @@
         }
     }
 #endif
-#endif
+
 
 
 #ifdef CONFIG_MTRACE
@@ -263,6 +263,8 @@ void mread_trace(paddr_t addr, int len){
 
 
 #endif
+#endif
+
 #endif
 
 
