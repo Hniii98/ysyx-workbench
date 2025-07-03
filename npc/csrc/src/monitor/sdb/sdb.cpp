@@ -30,23 +30,24 @@ static char *rl_gets() {
 	return line_read;
 }
 
-static int cmd_help(char *args); 
+static int cmd_help(char *args); // show help information
 static int cmd_si(char *args); // step instruction
 static int cmd_x(char *args); // scan memory
 static int cmd_info(char *args); // display information about given args
 static int cmd_q(char *args); // exit npc
-static int cmd_c(char *args);
+static int cmd_c(char *args); // continue the execution of program
  
 static struct {
 	const char *name;
 	const char *description;
 	int (*handler) (char *);
 } cmd_table[] {
-	{"help", "Display information about all supported commands", cmd_help},
-	{"q", "Exit npc", cmd_q},
-	{"info", "Display information about given args", cmd_info},
+	{"help", "Display information about all supported commands.", cmd_help},
+	{"q", "Exit npc.", cmd_q},
+	{"info", "Display information about given args.", cmd_info},
 	{"c", "Continue excuting the program.", cmd_c},
-	{"x", "Display N times four bytes memory from given position", cmd_info},
+	{"x", "Display N times four bytes memory from given position.", cmd_info},
+	{"si", "Step n times step and pause, n default set to 1.", cmd_si}
 	
 };
 
@@ -59,8 +60,9 @@ static int cmd_help(char *args){
 	/* show all supported commands */
 	if(arg == NULL){
 		for(int i = 0; i < NR_CMD; i++){
-			printf("%s - %s\n", cmd_table[i].name, cmd_table[i].description);
+			printf("%-10s - %s\n", cmd_table[i].name, cmd_table[i].description);
 		}
+		return 0;
 	}
 	/* only show about given arg */
 	else{

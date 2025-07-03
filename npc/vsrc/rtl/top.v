@@ -29,6 +29,7 @@ module top(
     /* regfiles output wires */
     wire [31:0] regfiles_to_muxa_wire;
     wire [31:0] regfiles_to_muxb_wire;
+    wire [31:0] regfiles_to_control_wire;
 
     /* immgen output wires */
     wire [31:0] immgen_to_muxb_wire;
@@ -52,7 +53,9 @@ module top(
     );
 
     control u_control(
+        .clk      (clk),
         .inst   	(inst    ),
+        .data_x10   (regfiles_to_control_wire),
         .ImmType    (control_to_immgen_wire),
         .PCSrc      (control_to_pc_wire),
         .RegWEn     (control_to_regfiles_wire),
@@ -71,7 +74,8 @@ module top(
         .addr_rs2       (rs2),
         .data_towrite   (writeback_to_regfiles_wire),
         .data_rs1       (regfiles_to_muxa_wire),
-        .data_rs2       (regfiles_to_muxb_wire)
+        .data_rs2       (regfiles_to_muxb_wire),
+        .data_x10       (regfiles_to_control_wire)
     );
   
     immgen u_immgen(
@@ -80,16 +84,16 @@ module top(
         .imm        (immgen_to_muxb_wire)
     );
     
-    always @(posedge clk) begin
-        $display("Current control signals is: %b", {control_to_pc_wire, 
-                                                    control_to_regfiles_wire,
-                                                    control_to_muxa_wire,
-                                                    control_to_muxb_wire,
-                                                    control_to_alu_wire,
-                                                    control_to_writeback_wire});
+    // always @(posedge clk) begin
+    //     $display("Current control signals is: %b", {control_to_pc_wire, 
+    //                                                 control_to_regfiles_wire,
+    //                                                 control_to_muxa_wire,
+    //                                                 control_to_muxb_wire,
+    //                                                 control_to_alu_wire,
+    //                                                 control_to_writeback_wire});
 
-        $display("[verilog] IMMGEN: inst=%08x ImmType=%b  imm num=%08x  alu result:%h", inst, control_to_immgen_wire, immgen_to_muxb_wire, alu_result_wire);
-    end
+    //     $display("[verilog] IMMGEN: inst=%08x ImmType=%b  imm num=%08x  alu result:%h", inst, control_to_immgen_wire, immgen_to_muxb_wire, alu_result_wire);
+    // end
 
 
     alu u_alu(

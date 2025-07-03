@@ -9,10 +9,10 @@ static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 uint8_t* guest_to_host(uint32_t paddr) {return pmem + paddr - CONFIG_MBASE;}
 uint32_t host_to_guest(uint8_t *haddr) {return haddr - pmem + CONFIG_MBASE;}
 
-static void out_of_bound(uint32_t addr){
-	extern uint32_t pc;
+void out_of_bound(uint32_t addr){
+	extern uint32_t current_pc;
 	printf("address = " FMT_PADDR " is out of bound of pmem [" FMT_PADDR ", " FMT_PADDR " ] at pc = " FMT_WORD "\n",
-      addr, CONFIG_MBASE, CONFIG_MBASE+CONFIG_MSIZE-1, pc);
+      addr, CONFIG_MBASE, CONFIG_MBASE+CONFIG_MSIZE-1, current_pc);
 }
 
 /* memory access */
@@ -21,19 +21,20 @@ static uint32_t pmem_read(uint32_t addr, int len){
 	return ret;
 }
 
-static uint32_t pmem_write(uint32_t addr, int len,  uint32_t data){
+static void pmem_write(uint32_t addr, int len,  uint32_t data){
 	host_write(guest_to_host(addr), len, data);
 }
 
 /* memory initialization */
 void init_mem(){
 	memset(pmem, rand(), CONFIG_MSIZE);
-	printf("[NPC] phsical memory initialization finished\n");
+	printf("[npc] phsical memory initialization finished\n");
 }
 
 uint32_t paddr_read(uint32_t addr, int len) {
 	if(likely(in_pmem(addr))) return pmem_read(addr, len);
 
+	/* addr out of memory bound*/
 	out_of_bound(addr);
 	return 0;
 }

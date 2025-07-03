@@ -4,11 +4,12 @@
 static Vtop* dut = NULL;
 VerilatedContext *contextp = NULL;
 VerilatedVcdC* tfp = NULL;
+uint32_t current_pc;
 
 
 
-void sim_init(){
-	printf("[NPC] simulator initialization ...\n");
+void param_init(){
+	printf("[npc] simulator initialization ...\n");
 	contextp = new VerilatedContext;
 	contextp->traceEverOn(true);
 	dut = new Vtop{contextp};
@@ -45,24 +46,23 @@ void reset(int n){
   
 }
 
-// void step_and_dump_wave() {
-//     single_cycle();
-// }
-
-void npc_init(){
+void sim_init(){
 	/* initial global parameters*/
-	sim_init();
+	param_init();
 
 	/* reset all unit of npc */
 	reset(10);
 }
 
+
+
 uint32_t paddr_read(uint32_t addr, int len);
 
 /* npc excute one cyclye and recore wave */
 void npc_exec_once(){
-	printf("[NPC] fectch instructions at" FMT_PADDR " and excute.\n", dut->PC);
-	dut->inst = paddr_read(dut->PC, 4); // read 4 bytes instructions
+	printf("[npc] fectch instructions at " FMT_PADDR " and excute.\n", dut->PC);
+	dut->inst = paddr_read(dut->PC, 4); // fetch instruction
+	current_pc = dut->PC; // restore the current pc from top module
 	single_cycle();
 }
 
@@ -71,6 +71,13 @@ void execute(uint64_t n){
 		npc_exec_once();
 		if (npc_state.state != NPC_RUNNING) break;
 	}	
+}
+
+extern "C" void npc_reach_ret(int code) {
+	npc_state.state = NPC_END;
+	npc_state.halt_ret = code;
+	npc_state.halt_pc = current_pc;
+	
 }
 
 void npc_exec(uint64_t n){
@@ -87,10 +94,14 @@ void npc_exec(uint64_t n){
 		case NPC_RUNNING: npc_state.state = NPC_STOP; break;
 
 		case NPC_END: case NPC_ABORT:
-			printf("nemu: %s at pc = " FMT_WORD,
+			printf("npc: %s at pc = " FMT_WORD "\n",
     	    	(npc_state.state == NPC_ABORT ? ANSI_FMT("ABORT", ANSI_FG_RED) :
       	 		(npc_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
-         		ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
+         		ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED) )),
           		npc_state.halt_pc);
+			break;
+		/* FALL THROUGH */
+		case NPC_QUIT:
+			break;
 	}	
 }

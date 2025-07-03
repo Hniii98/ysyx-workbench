@@ -1,10 +1,12 @@
-import "DPI-C" function void end_loop();
+import "DPI-C" function void npc_reach_ret(input  int code);
 
 `include "../include/defines.vh"
 `include "../templates/MuxKeyWithDefault.v"
 
 module control(
+    input clk,
     input [31:0] inst, 
+    input [31:0] data_x10,
     output [1:0] ImmType,
     output PCSrc,
     output RegWEn,
@@ -14,7 +16,7 @@ module control(
     output WriteSrc
 );
 
-  
+    
     wire [1:0] imm_type_wire;
     wire [6:0] opcode;
  
@@ -109,19 +111,17 @@ module control(
         })
     );
 
+  
     assign {PCSrc, RegWEn, ASrc, BSrc, ALUOp, WriteSrc} = signals_mux_wire;
     assign ImmType = imm_type_wire;
+    
 
-   always @(*) begin
-    /* ebreak inst */
-    
-    if (inst == 32'h00100073) begin
-        end_loop();  // DPI-C calling
+    always @(posedge clk) begin
+        /* ebreak instructions */
+        if (inst == 32'h00100073) begin
+            npc_reach_ret($signed(data_x10));  // 直接使用 data_x10
+        end
     end
-   
-    /* do nothing */
-    end
-    
 
    
 

@@ -29,6 +29,4 @@ uint8_t* guest_to_host(uint32_t paddr);
 void init_mem();
 void out_of_bound(uint32_t paddr);
 
-
-
 #endif

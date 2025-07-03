@@ -8,11 +8,12 @@ module regfiles(
     input [4:0] addr_rs1, // address for DataA
     input [4:0] addr_rs2, // address for DataB
     input [31:0] data_towrite, // data about to write
-    output reg [31:0]  data_rs1, 
-    output reg [31:0]  data_rs2
+    output [31:0]  data_rs1, 
+    output [31:0]  data_rs2,
+    output [31:0] data_x10 // signal for indicate function return status
 );
 
-   reg [31:0] regfiles_output_reg [31:0];   
+   wire [31:0] regfiles_output_wire [31:0];   
 
     `define REG_GENERATE(index) \
         Reg #(32, 32'h0) reg``index( \
@@ -20,7 +21,7 @@ module regfiles(
             .rst(rst), \
             .wen(RegWEn && (addr_towrite == index)), \
             .din(data_towrite), \
-            .dout(regfiles_output_reg[index]) \
+            .dout(regfiles_output_wire[index]) \
         ); \
       
         
@@ -33,7 +34,7 @@ module regfiles(
                 .rst(rst),
                 .wen(1), // always writable
                 .din(32'h0), // always zero
-                .dout(regfiles_output_reg[0])
+                .dout(regfiles_output_wire[0])
     );
             end
             else begin : gpr_i
@@ -42,7 +43,8 @@ module regfiles(
         end 
     endgenerate
 
-    assign data_rs1 = regfiles_output_reg[addr_rs1];
-    assign data_rs2 = regfiles_output_reg[addr_rs2];
+    assign data_rs1 = regfiles_output_wire[addr_rs1];
+    assign data_rs2 = regfiles_output_wire[addr_rs2];
+    assign data_x10 = regfiles_output_wire[10]; 
 
 endmodule
