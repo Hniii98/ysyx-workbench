@@ -31,7 +31,7 @@ static int parse_argument(int argc, char *argv[]){
 
 static long load_img(){
 	if(img_file == NULL){
-		printf("[NPC] loading built in img to npc \n");
+		printf("[npc] loading built in img to npc \n");
 		memcpy(guest_to_host(RESET_VECTOR), builtin_img, sizeof(builtin_img));
 		return 4096;  // force to align to 4KB
 	}
@@ -56,16 +56,18 @@ static long load_img(){
 
 void init_monitor(int argc, char *argv[]){
 	
-	//
+	// parse argument from options
 	parse_argument(argc, argv);
 
-	//
+	// init rand seed
 	init_rand();
 
-	//
+	// init memory by random value
 	init_mem();
 
-	//
+	// load image to memory
 	long img_size = load_img();
+
+	// 
 
 }
