@@ -1,5 +1,6 @@
 #include <common.h>
-#include <verilator.h>
+#include <verilator.hh>
+#include <sim.h>
 
 static Vtop* dut = NULL;
 VerilatedContext *contextp = NULL;
@@ -54,9 +55,7 @@ void sim_init(){
 	reset(10);
 }
 
-
-
-uint32_t paddr_read(uint32_t addr, int len);
+extern "C" uint32_t paddr_read(uint32_t addr, int len);
 
 /* npc excute one cyclye and recore wave */
 void npc_exec_once(){

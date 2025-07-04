@@ -1,12 +1,11 @@
 #include <common.h>
+#include <sim.h>
 
-void init_monitor(int argc, char *argv[]);
-void sim_init();
-void sim_exit();
-void sdb_mainloop();
-int is_exit_status_bad();
-
-
+extern "C"{
+	void init_monitor(int argc, char *argv[]);
+	void sdb_mainloop();
+	int is_exit_status_bad();
+}
 
 int main(int argc, char *argv[]){
 	/* init global parameter */

@@ -1,4 +1,3 @@
-
 module top(
     input clk, rst,
     input [31:0] inst,
