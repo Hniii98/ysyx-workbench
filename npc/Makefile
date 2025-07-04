@@ -1,77 +1,14 @@
-# TOPNAME = top
+#Include C files compile rules
+include script/build.mk
 
-# WORK_DIR = $(shell pwd)
-# INC_PATH := $(WORK_DIR)/csrc/include $(INC_PATH)
-
-# VERILATOR = verilator
-# VINC_PATH := $(WORK_DIR)/vsrc/include $(WORK_DIR)/vsrc/templates/generic $(WORK_DIR)/vsrc/templates/specific
-# VINCFLAGS = $(addprefix -I, $(VINC_PATH))
-# VERILATOR_CFLAGS += -MMD --build -cc  \
-# 				-O2 --x-assign fast --x-initial fast --noassert --trace --debug \
-# 				$(VINCFLAGS)
-				
-
-# BUILD_DIR =$(WORK_DIR)/build
-# OBJ_DIR = $(BUILD_DIR)/obj_dir
-
-# BIN = $(BUILD_DIR)/$(TOPNAME)
-
-
-# GDB_ARGS ?= 
-# GDB_PORT ?= 1234  # 默认 GDB 调试端口
-
-
-# default: $(BIN)
-
-# $(shell mkdir -p $(BUILD_DIR))
-
-
-# # project source
-# VSRCS = $(shell find $(abspath ./vsrc) -name "*.v")
-# CSRCS = $(shell find $(abspath ./csrc/src) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
-
-
-# # rules for verilator
-# INCFLAGS = $(addprefix -I, $(INC_PATH))
-# CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -mcmodel=large -fPIC -g
-
-# $(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
-# 	@rm -rf $(OBJ_DIR)
-# 	@$(VERILATOR)  $(VERILATOR_CFLAGS) \
-# 		--top-module $(TOPNAME) $^ \
-# 		$(addprefix -CFLAGS , $(CXXFLAGS))  \
-# 		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN)) >/dev/null
-
-# all: default
-
-# # Command to excute top
-# IMG ?=
-
-# run: $(BIN)
-# 	@echo \# Runing verilator simulation 
-# 	@$(BIN) $(IMG)
-
-# gdb: $(BIN)
-# 	@echo "Starting GDB server for Verilator simulation..."
-# 	gdb --args $(BIN) $(IMG)
-	
-# clean:
-# 	rm -rf $(BUILD_DIR)
-# 	rm *.vcd *.view
-
-# .PHONY: default all clean run
-
-TOPNAME = top
-
-WORK_DIR := $(shell pwd)
+TOPNAME := top
 
 # Include paths
-INC_PATH := \
-  $(WORK_DIR)/csrc/include \
-  $(WORK_DIR)/csrc/include/memory \
+CXXINC_PATH := \
+  $(WORK_DIR)/csrc/include/cxx \
+  $(WORK_DIR)/csrc/include/mixed
  
-
-INCFLAGS := $(addprefix -I, $(INC_PATH))
+CXXINCFLAGS := $(addprefix -I, $(CXXINC_PATH))
 
 # Verilator include paths
 VINC_PATH := \
@@ -81,45 +18,43 @@ VINC_PATH := \
 VINCFLAGS := $(addprefix -I, $(VINC_PATH))
 
 # Verilator options
-VERILATOR = verilator
-VERILATOR_CFLAGS += -MMD --build -cc \
-	-O2 --x-assign fast --x-initial fast --noassert --trace --debug \
-	$(VINCFLAGS)
+VERILATOR := verilator
+VFLAGS := -MMD --build -cc \
+	-O2 --x-assign fast --x-initial fast --noassert --trace --debug
+
+VFLAGS += $(VINCFLAGS)
 
 # Build output paths
-BUILD_DIR = $(WORK_DIR)/build
-OBJ_DIR   = $(BUILD_DIR)/obj_dir
-BIN       = $(BUILD_DIR)/$(TOPNAME)
+BIN := $(BUILD_DIR)/$(TOPNAME)
 
 # Collect source files
-VSRCS = $(shell find $(abspath ./vsrc) -name "*.v")
-CSRCS = $(shell find $(abspath ./csrc/src) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
+VSRCS := $(shell find $(abspath ./vsrc) -name "*.v")
+CXXSRCS := $(shell find $(abspath ./csrc/src) -name "*.cc" -or -name "*.cpp")
+
 
 # Compilation flags
-CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\"" -mcmodel=large -fPIC -g \
+CXXFLAGS := -mcmodel=large -fPIC -g
+CXXFLAGS += $(CXXINCFLAGS) 
+CXXFLAGS += -DTOP_NAME="\"V$(TOPNAME)\""
 
-# For vtop.mk
-#export LDFLAGS += -lreadline -lncurses
+# Link flags
+LDFLAGS := -lreadline -lncurses
 
 # GDB / run args
-IMG ?=
+IMG ?=  # support to run without IMG
 GDB_ARGS ?=
 GDB_PORT ?= 1234
 
-# Default target
-default: $(BIN)
-
-# Ensure build directory exists
-$(shell mkdir -p $(BUILD_DIR))
-
 # Compile binary with verilator
-$(BIN): $(VSRCS) $(CSRCS)
-	@rm -rf $(OBJ_DIR)
-	@$(VERILATOR) $(VERILATOR_CFLAGS) \
-		--top-module $(TOPNAME) $^ \
-		--LDFLAGS "-lreadline -lncurses" \
-		$(addprefix -CFLAGS , $(CXXFLAGS)) \
-		--Mdir $(OBJ_DIR) --exe -o $(abspath $(BIN)) >/dev/null
+# Verilator only support --CFLAGS, so prefix only can be that.
+$(BIN): $(VSRCS) $(CXXSRCS) $(COBJS)
+	@$(VERILATOR) $(VFLAGS) \
+		--top-module $(TOPNAME) $(VSRCS) $(CXXSRCS) \
+		$(addprefix --CFLAGS , $(CXXFLAGS)) \
+		$(addprefix --LDFLAGS , $(LDFLAGS)) \
+		--Mdir $(OBJ_DIR) \
+		--exe $(CXXSRCS) $(COBJS) \
+		-o $(abspath $(BIN)) 
 
 # Shortcuts
 all: default
@@ -135,5 +70,12 @@ gdb: $(BIN)
 clean:
 	rm -rf $(BUILD_DIR)
 	rm -f *.vcd *.view
+	rm -rf obj_dir
+
+print-%:
+	@echo '$*=$($*)'
 
 .PHONY: default all clean run gdb
+
+# Default target
+default: $(BIN)
