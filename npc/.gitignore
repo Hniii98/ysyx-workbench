@@ -1,18 +1,1 @@
-# 忽略所有文件和目录
-/*
-
-# 但不忽略以下内容（根目录）
-!/*.v
-!/*.cpp
-!/*.cc
-!/*.c
-!/*.h
-!/*.S
-!/Makefile
-!/*.mk
-!/.gitignore
-!/README.md
-!/*.nxdc
-
-# 忽略 build 目录（以及其下所有内容）
 build/
