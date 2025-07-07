@@ -5,9 +5,7 @@
 static Vtop* dut = NULL;
 VerilatedContext *contextp = NULL;
 VerilatedVcdC* tfp = NULL;
-uint32_t current_pc;
-
-
+uint32_t current_pc; // save current period PC in simulator
 
 void param_init(){
 	printf("[npc] simulator initialization ...\n");
@@ -50,9 +48,9 @@ void reset(int n){
 void sim_init(){
 	/* initial global parameters*/
 	param_init();
-
 	/* reset all unit of npc */
 	reset(10);
+
 }
 
 extern "C" uint32_t paddr_read(uint32_t addr, int len);
