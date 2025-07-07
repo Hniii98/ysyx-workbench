@@ -46,7 +46,7 @@ static struct {
 	{"q", "Exit.", cmd_q},
 	{"info", "Display information about given args, only support 'info r' now.", cmd_info},
 	{"c", "Continue excuting the program.", cmd_c},
-	{"x", "Display N times four bytes memory from given position.", cmd_info},
+	{"x", "Display N times four bytes memory from given position.", cmd_x},
 	{"si", "Move n  steps and pause, n default set to 1.", cmd_si},
 	
 };
@@ -151,11 +151,13 @@ static int cmd_x(char *args){
 	return 0;
 }
 
+
+
 static int cmd_info(char *args){
 	char *arg = strtok(NULL, " ");
 
 	if(strcmp(arg, "r") == 0) {
-		npc_reg_display();
+		npc_regs_display();
 	}
 	/* TODO: support more infomation like watchpoint ..*/
 	else{

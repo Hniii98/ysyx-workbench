@@ -20,7 +20,7 @@ VINCFLAGS := $(addprefix -I, $(VINC_PATH))
 # Verilator options
 VERILATOR := verilator
 VFLAGS := -MMD --build -cc \
-	-O2 --x-assign fast --x-initial fast --noassert --trace --debug
+	-O2 --x-assign fast --x-initial fast --noassert --trace --debug  #--public-flat-rw
 
 VFLAGS += $(VINCFLAGS)
 
@@ -36,6 +36,7 @@ CXXSRCS := $(shell find $(abspath ./csrc/src) -name "*.cc" -or -name "*.cpp")
 CXXFLAGS := -mcmodel=large -fPIC -g
 CXXFLAGS += $(CXXINCFLAGS) 
 CXXFLAGS += -DTOP_NAME="\"V$(TOPNAME)\""
+
 
 # Link flags
 LDFLAGS := -lreadline -lncurses
