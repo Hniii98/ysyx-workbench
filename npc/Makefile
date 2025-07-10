@@ -5,8 +5,8 @@ TOPNAME := top
 
 # Include paths
 CXXINC_PATH := \
-  $(WORK_DIR)/csrc/include/cxx \
-  $(WORK_DIR)/csrc/include/mixed
+  $(WORK_DIR)/csrc/include/
+
  
 CXXINCFLAGS := $(addprefix -I, $(CXXINC_PATH))
 

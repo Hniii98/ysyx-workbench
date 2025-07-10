@@ -11,8 +11,8 @@ COBJS := $(CSRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
 # Compilation flags
 CINC_PATH := \
-  $(WORK_DIR)/csrc/include/c \
-  $(WORK_DIR)/csrc/include/mixed 
+  $(WORK_DIR)/csrc/include/
+
   
 CINCFLAGS := $(addprefix -I, $(CINC_PATH))
 

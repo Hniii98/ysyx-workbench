@@ -13,6 +13,9 @@ void npc_exec(uint64_t n);
 void sim_init();
 void sim_exit();
 
+
+void npc_set_scope(const char* name);
+
 #ifdef __cplusplus
 }
 #endif
