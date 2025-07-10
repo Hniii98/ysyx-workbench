@@ -13,12 +13,13 @@ module regfiles(
 );
 
 
-    export "DPI-C" function get_gpr_value;
-    function int get_gpr_value(int index);
-        if (index >= 0 && index < 32)
-            get_gpr_value = gpr[index];
+    export "DPI-C" function npc_send_gprval;
+    
+    function int unsigned npc_send_gprval(int unsigned index);
+        if (index < 32)
+            npc_send_gprval = gpr[index];
         else
-            get_gpr_value = 0;
+            npc_send_gprval = 0;
     endfunction
     
     reg [31:0] gpr [0:31];

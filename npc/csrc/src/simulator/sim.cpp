@@ -1,6 +1,7 @@
 #include <common.h>
-#include <verilator.hh>
+#include <verilator.h>
 #include <sim.h>
+
 
 static Vtop* dut = NULL;
 VerilatedContext *contextp = NULL;
@@ -101,4 +102,27 @@ void npc_exec(uint64_t n){
 		case NPC_QUIT:
 			break;
 	}	
+}
+
+#define NR_SCOPES ARRLEN(scopes_name)
+
+const char* scopes_name [] = {
+	"alu", "control", "immgen", "pc", "regfiles",
+	"writeback",
+};
+
+void npc_set_scope(const char* name){
+    const char* prefix = "TOP.top.u_";
+    char final_name[128];  
+
+    for(int i = 0 ; i < NR_SCOPES; i++){
+        if(strcmp(name, scopes_name[i]) == 0){
+            snprintf(final_name, sizeof(final_name), "%s%s", prefix, name);  
+            svScope scope = svGetScopeFromName(final_name);
+            svSetScope(scope);
+            return;
+        }
+    }
+
+    printf("[npc] Invalid module name '%s' \n", name);
 }

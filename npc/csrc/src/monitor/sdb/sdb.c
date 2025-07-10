@@ -138,7 +138,7 @@ static int cmd_x(char *args){
 	}
 
 	/* display bytes */
-	printf("{");
+	printf("{ ");
 	for(int i = 0; i < n; i++){
 		uint32_t value;
 		memcpy(&value, start, 4); // read 4bytes
@@ -146,7 +146,7 @@ static int cmd_x(char *args){
 		if(i != n-1) {printf(", ");}
 		start += 4; // move forward 4 bytes
 	}
-	printf("}\n");
+	printf(" }\n");
 
 	return 0;
 }
@@ -157,7 +157,7 @@ static int cmd_info(char *args){
 	char *arg = strtok(NULL, " ");
 
 	if(strcmp(arg, "r") == 0) {
-		npc_regs_display();
+		sim_display_regs();
 	}
 	/* TODO: support more infomation like watchpoint ..*/
 	else{
