@@ -1,6 +1,8 @@
 #include <common.h>
 #include <paddr.h>
 #include <host.h>
+#include <trace.h>
+#include <sim.h>
 
 
 uint32_t builtin_img [] = {
@@ -17,9 +19,8 @@ uint8_t* guest_to_host(uint32_t paddr) {return pmem + paddr - CONFIG_MBASE;}
 uint32_t host_to_guest(uint8_t *haddr) {return haddr - pmem + CONFIG_MBASE;}
 
 void out_of_bound(uint32_t addr){
-	extern uint32_t current_pc;
 	printf("address = " FMT_PADDR " is out of bound of pmem [" FMT_PADDR ", " FMT_PADDR " ] at pc = " FMT_WORD "\n",
-      addr, CONFIG_MBASE, CONFIG_MBASE+CONFIG_MSIZE-1, current_pc);
+      addr, CONFIG_MBASE, CONFIG_MBASE+CONFIG_MSIZE-1, g_current_pc);
 }
 
 /* memory access */
@@ -39,16 +40,21 @@ void init_mem(){
 }
 
 uint32_t paddr_read(uint32_t addr, int len) {
+	#ifdef CONFIG_MTRACE
+		if(mtrace_enable(addr)) mread_trace(addr, len);
+	#endif
+	
 	if(likely(in_pmem(addr))) return pmem_read(addr, len);
-
-	/* addr out of memory bound*/
 	out_of_bound(addr);
 	return 0;
 }
 
 void paddr_write(uint32_t addr, int len, uint32_t data){
-	if(likely(in_pmem(addr))) { pmem_write(addr, len, data); return;}
+	#ifdef CONFIG_MTRACE
+		if(mtrace_enable(addr)) mwrite_trace(addr, len, data);
+	#endif
 
+	if(likely(in_pmem(addr))) { pmem_write(addr, len, data); return;}
 	out_of_bound(addr);
 	return ;
 }

@@ -12,9 +12,10 @@ extern "C" {
 void npc_exec(uint64_t n);
 void sim_init();
 void sim_exit();
-
-
 void npc_set_scope(const char* name);
+
+
+extern uint32_t g_current_pc; 
 
 #ifdef __cplusplus
 }
