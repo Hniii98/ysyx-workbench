@@ -7,3 +7,5 @@ void npc_reach_ret(int code) {
 	g_npc_state.halt_ret = code;
 	g_npc_state.halt_pc = g_current_pc;	
 }
+
+
