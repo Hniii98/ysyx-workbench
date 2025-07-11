@@ -2,7 +2,7 @@
 #define __UTILS_H__
 
 #include <common.h>
-
+#include <trace.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,8 +15,9 @@ typedef struct {
 	int state;
 	uint32_t halt_pc;
 	uint32_t halt_ret;
-	IFDEF(CONFIG_ITRACE, char logbuf[128]);
-	
+#ifdef CONFIG_ITRACE
+	char logbuf[128];
+#endif
 } NPC_STATE;
 
 extern NPC_STATE g_npc_state;

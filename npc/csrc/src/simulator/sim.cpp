@@ -1,6 +1,7 @@
 #include <common.h>
 #include <verilator.h>
 #include <sim.h>
+#include <trace.h>
 
 
 static Vtop* dut = NULL;
@@ -55,13 +56,34 @@ void sim_init(){
 }
 
 extern "C" uint32_t paddr_read(uint32_t addr, int len);
+extern "C" void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
 
 /* npc excute one cyclye and recore wave */
 void npc_exec_once(){
 	printf("[npc] fectch instructions at " FMT_PADDR " and excute.\n", dut->PC);
-	dut->inst = paddr_read(dut->PC, 4); // fetch instruction
+	uint32_t inst_val = paddr_read(dut->PC, 4);
+	dut->inst = inst_val; // fetch instruction
 	g_current_pc = dut->PC; // restore the current pc from top module
 	single_cycle();
+
+	#ifdef CONFIG_ITRACE
+	char *p = g_npc_state.logbuf;
+	p += snprintf(p, sizeof(g_npc_state.logbuf), FMT_WORD ":", dut->PC);
+	int ilen = 4;
+	int i;
+	uint8_t *inst = (uint8_t *)&inst_val;
+	for (i = ilen - 1; i >= 0; i --) { // little endian
+		p += snprintf(p, 4, " %02x", inst[i]);
+	}
+	int space_len =  1; // fill blank at rear
+	memset(p, ' ', space_len);
+	p += space_len;
+
+	disassemble(p, g_npc_state.logbuf + sizeof(g_npc_state.logbuf) - p,
+		g_current_pc, inst, ilen);
+	printf("%s\n", g_npc_state.logbuf);
+	#endif
+	
 }
 
 void execute(uint64_t n){
@@ -70,13 +92,6 @@ void execute(uint64_t n){
 		if (g_npc_state.state != NPC_RUNNING) break;
 	}	
 }
-
-// extern "C" void npc_reach_ret(int code) {
-// 	g_npc_state.state = NPC_END;
-// 	g_npc_state.halt_ret = code;
-// 	g_npc_state.halt_pc = current_pc;
-	
-// }
 
 void npc_exec(uint64_t n){
 	switch (g_npc_state.state) {
@@ -103,6 +118,8 @@ void npc_exec(uint64_t n){
 			break;
 	}	
 }
+
+
 
 #define NR_SCOPES ARRLEN(scopes_name)
 

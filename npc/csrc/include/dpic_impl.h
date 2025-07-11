@@ -6,11 +6,13 @@
 extern "C" {
 #endif
 	#include <inttypes.h>
-	//  verilator export function
+	/* verilator to  C*/
 	uint32_t npc_send_gprval(uint32_t index);
+	uint32_t npc_send_inst();
 
-	//  verilator dpi-c import
+	/* C to verilator */
 	void npc_reach_ret(int code);
+	
 	
 
 #ifdef __cplusplus

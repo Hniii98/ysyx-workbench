@@ -5,6 +5,7 @@
 static char *img_file = NULL;
 void init_disasm(const char *triple);
 void sdb_set_batch_mode();
+void init_disasm(const char *triple);
 
 static int parse_argument(int argc, char *argv[]){
 	const struct option table[] = {
@@ -69,6 +70,6 @@ void init_monitor(int argc, char *argv[]){
 	long img_size = load_img();
 
 	// init disassemble
-	//init_disasm("riscv32" "-pc-linux-gnu");
+	init_disasm("riscv32" "-pc-linux-gnu");
 
 }

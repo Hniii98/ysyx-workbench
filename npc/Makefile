@@ -36,10 +36,18 @@ CXXSRCS := $(shell find $(abspath ./csrc/src) -name "*.cc" -or -name "*.cpp")
 CXXFLAGS := -mcmodel=large -fPIC -g
 CXXFLAGS += $(CXXINCFLAGS) 
 CXXFLAGS += -DTOP_NAME="\"V$(TOPNAME)\""
+CXXFLAGS += $(shell llvm-config --cxxflags) -fPIE
 
 
 # Link flags
-LDFLAGS := -lreadline -lncurses
+#LDFLAGS := -lreadline -lncurses
+
+# Librarys
+LIBS := -lreadline -lncurses
+LIBS += $(shell llvm-config --libs)  
+
+
+
 
 # GDB / run args
 IMG ?=  # support to run without IMG
@@ -52,7 +60,7 @@ $(BIN): $(VSRCS) $(CXXSRCS) $(COBJS)
 	@$(VERILATOR) $(VFLAGS) \
 		--top-module $(TOPNAME) $(VSRCS) $(CXXSRCS) \
 		$(addprefix --CFLAGS , $(CXXFLAGS)) \
-		$(addprefix --LDFLAGS , $(LDFLAGS)) \
+		$(addprefix --LDFLAGS , $(LIBS)) \
 		--Mdir $(OBJ_DIR) \
 		--exe $(CXXSRCS) $(COBJS) \
 		-o $(abspath $(BIN)) 
