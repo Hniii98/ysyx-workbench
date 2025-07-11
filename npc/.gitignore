@@ -1,4 +1,13 @@
+*.*
+*
+!*/
+!Makefile
+!*.mk
+!*.[cSh]
+!*.cpp
+!*.hh
+!.gitignore
+!README.md
+include/config
+include/generated
 build/
-*.vcd
-*view
-.vscode

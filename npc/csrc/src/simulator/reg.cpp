@@ -6,7 +6,7 @@
 #define NR_REGS ARRLEN(regs_name)
 
 
-extern "C" uint32_t npc_send_gprval(uint32_t index);
+// extern "C" uint32_t npc_send_gprval(uint32_t index);
 
 const char *regs_name[] = {
   "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",

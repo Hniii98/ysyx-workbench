@@ -3,6 +3,7 @@
 
 #include <common.h>
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -14,9 +15,11 @@ typedef struct {
 	int state;
 	uint32_t halt_pc;
 	uint32_t halt_ret;
+	IFDEF(CONFIG_ITRACE, char logbuf[128]);
+	
 } NPC_STATE;
 
-extern NPC_STATE npc_state;
+extern NPC_STATE g_npc_state;
 // ANSI color
 
 #define ANSI_FG_BLACK   "\33[1;30m"
