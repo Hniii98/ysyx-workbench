@@ -10,6 +10,12 @@ extern "C" {
 
 #include <string.h>
 
+// #define CONFIG_FTRACE 1
+// #define CONFIG_ITRACE 1
+
+
+
+
 // macro stringizing
 #define str_temp(x) #x
 #define str(x) str_temp(x)

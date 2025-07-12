@@ -1,7 +1,6 @@
 #include <common.h>
 #include <paddr.h>
 #include <host.h>
-#include <trace.h>
 #include <sim.h>
 
 
@@ -40,9 +39,7 @@ void init_mem(){
 }
 
 uint32_t paddr_read(uint32_t addr, int len) {
-	#ifdef CONFIG_MTRACE
-		if(mtrace_enable(addr)) mread_trace(addr, len);
-	#endif
+	
 	
 	if(likely(in_pmem(addr))) return pmem_read(addr, len);
 	out_of_bound(addr);
@@ -50,9 +47,7 @@ uint32_t paddr_read(uint32_t addr, int len) {
 }
 
 void paddr_write(uint32_t addr, int len, uint32_t data){
-	#ifdef CONFIG_MTRACE
-		if(mtrace_enable(addr)) mwrite_trace(addr, len, data);
-	#endif
+	
 
 	if(likely(in_pmem(addr))) { pmem_write(addr, len, data); return;}
 	out_of_bound(addr);

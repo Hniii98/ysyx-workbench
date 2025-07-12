@@ -1,13 +1,13 @@
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
-#include <common.h>
-#include <trace.h>
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include "trace.h"
 // state
 enum { NPC_RUNNING, NPC_STOP, NPC_END, NPC_ABORT, NPC_QUIT };
 

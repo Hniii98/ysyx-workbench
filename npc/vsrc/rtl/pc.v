@@ -33,10 +33,16 @@ module pc (
     end
 
     // Output assignments
-    
     assign snpc_result_wire = pc_result_reg + 32'h4; //  combinational logic adder
     assign SNPC = snpc_result_wire;  // for register writeback (e.g., JAL)
     assign PC = pc_result_reg;
+
+    /* DPI-C */
+    export "DPI-C" function npc_send_dnpc;
+ 
+    function int unsigned npc_send_dnpc();
+        npc_send_dnpc = pc_result_reg;
+    endfunction
  
 endmodule
 

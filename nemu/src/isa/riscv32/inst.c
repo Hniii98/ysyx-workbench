@@ -86,9 +86,9 @@ static int decode_exec(Decode *s) {
 	  R(rd) = s->pc + 4; 
     s->dnpc = (src1 + imm) & ~1 
      #ifdef CONFIG_FTRACE
-      ; // close previous code
+      ; // close previous code line
       void isa_unconjump_trace(vaddr_t pc, int rd, vaddr_t target);
-      isa_unconjump_trace(s->pc, rd, s->dnpc) // marco INSTPAT_MATCH add ; for us
+      isa_unconjump_trace(s->pc, rd, s->dnpc) // marco INSTPAT_MATCH add ';' for this code line
     #endif
   );
 
@@ -135,7 +135,7 @@ static int decode_exec(Decode *s) {
     #ifdef CONFIG_FTRACE
       ; // close previous code
       void isa_unconjump_trace(vaddr_t pc, int rd, vaddr_t target);
-      isa_unconjump_trace(s->pc, rd, s->dnpc)
+      isa_unconjump_trace(s->pc, rd, s->dnpc) // marco INSTPAT_MATCH add ';' for this code line
     #endif
   );
   

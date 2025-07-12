@@ -52,13 +52,13 @@ void iringbuf_display();
   enum {ft_call = 0, ft_ret, };
 
   typedef struct{ 
-    word_t wptr;
+    uint32_t wptr;
     char ft_logs[MAX_CALLDEPTH][128];
   }FTraceData;
 
   void init_ftrace(const char *elf_file);
   void free_ftracetab();
-  void ftracedata_write_once(vaddr_t pc, int ft_type, vaddr_t target);
+  void ftracedata_write_once(uint32_t pc, int ft_type, uint32_t target);
   void ftracedata_display();
   
 #endif

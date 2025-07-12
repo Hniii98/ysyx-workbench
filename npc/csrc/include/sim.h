@@ -12,8 +12,7 @@ extern "C" {
 void npc_exec(uint64_t n);
 void sim_init();
 void sim_exit();
-void npc_set_scope(const char* name);
-
+void sim_display_regs();
 
 extern uint32_t g_current_pc; 
 

@@ -16,8 +16,12 @@ module control(
 
     wire [1:0] imm_type_wire;
     wire [6:0] opcode;
+    wire [2:0] funct3;
+    wire [4:0] rd;
  
     assign opcode = inst[6:0];
+    assign funct3 = inst[14:12];
+    assign rd     = inst[11:7];
     localparam UNKNOWN_IMM_TYPE =  2'b11; // 
 
     /* level one decode of inst */ 
@@ -124,6 +128,8 @@ module control(
     end
 
     
+    /* DPI-C */
+
     /* send current instruction to simulator */
     reg [31:0] inst_buffer;
 
@@ -136,6 +142,29 @@ module control(
         npc_send_inst = inst_buffer;
     endfunction
 
+   /* send 1 bit signal to indicate whether instcution is a unconditional jump */
+    reg [7:0] is_uncond_jump; // extend 1 bit to nearest unsigned type
+    reg [7:0] rd_buffer; // extend 5 bits to nearest unsigned type
+
+    always @(posedge clk) begin
+        rd_buffer <= {3'b000, rd}; // store rd and extend
+        if(imm_type_wire == `J_TYPE)  // jalr
+            is_uncond_jump <= {7'h0, 1'b1}; 
+        else if(opcode == 7'b110_0111 ) // jal
+            is_uncond_jump <= {7'h0, 1'b1};
+        else 
+            is_uncond_jump <= {7'h0, 1'b0};   
+    end
+
+    export "DPI-C" function npc_send_rd;
+    function byte unsigned npc_send_rd();
+        npc_send_rd = rd_buffer;
+    endfunction
+
+    export "DPI-C" function npc_send_is_uncondjump;
+    function byte unsigned npc_send_is_uncondjump();
+        npc_send_is_uncondjump = is_uncond_jump;
+    endfunction
    
    
 
