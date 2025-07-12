@@ -16,7 +16,7 @@ CINC_PATH := \
   
 CINCFLAGS := $(addprefix -I, $(CINC_PATH))
 
-CFLAGS := -std=gnu11 -mcmodel=large -fPIC -g -MMD -MP
+CFLAGS := -std=gnu11 -mcmodel=large -fPIC -g -MMD -MP $(MARCO)
 CFLAGS += $(CINCFLAGS)
 
 # Compile rules

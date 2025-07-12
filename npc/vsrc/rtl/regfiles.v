@@ -42,8 +42,8 @@ module regfiles(
     assign data_x10 = gpr[10];
 
 
-
-     export "DPI-C" function npc_send_gprval;
+    /* DPI-C */
+    export "DPI-C" function npc_send_gprval;
  
     function int unsigned npc_send_gprval(int unsigned index);
         if (index < 32)

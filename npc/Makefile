@@ -33,7 +33,7 @@ CXXSRCS := $(shell find $(abspath ./csrc/src) -name "*.cc" -or -name "*.cpp")
 
 
 # Compilation flags
-CXXFLAGS := -mcmodel=large -fPIC -g
+CXXFLAGS := -mcmodel=large -fPIC -g $(MARCO)
 CXXFLAGS += $(CXXINCFLAGS) 
 CXXFLAGS += -DTOP_NAME="\"V$(TOPNAME)\""
 CXXFLAGS += $(shell llvm-config --cxxflags) -fPIE
@@ -51,7 +51,7 @@ LIBS += $(shell llvm-config --libs)
 
 # GDB / run args
 IMG ?=  # support to run without IMG
-GDB_ARGS ?=
+ARGS ?=
 GDB_PORT ?= 1234
 
 # Compile binary with verilator
@@ -70,11 +70,11 @@ all: default
 
 run: $(BIN)
 	@echo \# Running verilator simulation
-	@$(BIN) $(IMG)
+	@$(BIN) $(ARGS) $(IMG)
 
 gdb: $(BIN)
 	@echo "Starting GDB server for Verilator simulation..."
-	gdb --args $(BIN) $(IMG)
+	gdb --args $(BIN) $(ARGS) $(IMG)
 
 clean:
 	rm -rf $(BUILD_DIR)
