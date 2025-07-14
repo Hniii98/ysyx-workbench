@@ -3,12 +3,13 @@
 #include <sim.hh>
 #include <utils.h>
 #include <sim.h>
+#include <difftest-def.h>
 
 
 static Vtop* dut = NULL;
 VerilatedContext *contextp = NULL;
 VerilatedVcdC* tfp = NULL;
-uint32_t g_current_pc; // save current period PC in simulator
+uint32_t g_frozen_pc; // freeze pc value before npc execute once instruction
 
 void param_init(){
 	printf("[npc] simulator initialization ...\n");
@@ -63,13 +64,13 @@ extern "C" void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int
 void npc_exec_once(){
 	
 	uint32_t inst_val = paddr_read(dut->PC, 4);
-	dut->inst = inst_val; // fetch instruction
-	g_current_pc = dut->PC; // restore the current pc from top module
+	dut->inst = inst_val; // fetch instruction from host simulated memory
+	g_frozen_pc = dut->PC; // restore the current pc from top module
 	single_cycle();
 
 #ifdef CONFIG_ITRACE
 	char *p = g_npc_state.logbuf;
-	p += snprintf(p, sizeof(g_npc_state.logbuf), FMT_WORD ":", g_current_pc);
+	p += snprintf(p, sizeof(g_npc_state.logbuf), FMT_WORD ":", g_frozen_pc);
 	int ilen = 4;
 	int i;
 	uint8_t *inst = (uint8_t *)&inst_val;
@@ -81,29 +82,39 @@ void npc_exec_once(){
 	p += space_len;
 
 	disassemble(p, g_npc_state.logbuf + sizeof(g_npc_state.logbuf) - p,
-		g_current_pc, inst, ilen);
-	printf("%s\n", g_npc_state.logbuf);
+		g_frozen_pc, inst, ilen);
+	//printf("%s\n", g_npc_state.logbuf);
 #endif
 
 #ifdef CONFIG_FTRACE
 	bool ftrace_enable = sim_get_is_uncondjump();
-	uint32_t dnpc = sim_get_dnpc();
+	uint32_t dnpc = sim_get_nextpc();
 	uint8_t rd = sim_get_rd();
 
 	if(ftrace_enable){
-		write_uncondjump_trace(g_current_pc, rd, dnpc);
-		ftracedata_display_once();
+		write_uncondjump_trace(g_frozen_pc, rd, dnpc);
+		//ftracedata_display_once();
 	}
 	
 	
 
-#endif
-	
+#endif	
+}
+
+static void trace_and_difftest(){
+	/* traece */
+	IFDEF(CONFIG_ITRACE, printf("%s\n", g_npc_state.logbuf));
+	IFDEF(CONFIG_FTRACE,
+		if(sim_get_is_uncondjump()) { ftracedata_display_once(); });
+
+	/* difftest*/
+	IFDEF(CONFIG_DIFFTEST, difftest_step());
 }
 
 void execute(uint64_t n){
 	for(; n > 0; n --){
 		npc_exec_once();
+		trace_and_difftest();
 		if (g_npc_state.state != NPC_RUNNING) break;
 	}	
 }

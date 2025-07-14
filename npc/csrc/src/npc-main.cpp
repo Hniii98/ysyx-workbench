@@ -9,11 +9,12 @@ extern "C"{
 }
 
 int main(int argc, char *argv[]){
-	/* init global parameter */
-	init_monitor(argc, argv);
 
 	/* init verilator related parameter*/
 	sim_init();
+
+	/* init global parameter */
+	init_monitor(argc, argv);
 
 	/* start sdb, waiting command from user */
 	sdb_mainloop();

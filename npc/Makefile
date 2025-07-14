@@ -20,7 +20,8 @@ VINCFLAGS := $(addprefix -I, $(VINC_PATH))
 # Verilator options
 VERILATOR := verilator
 VFLAGS := -MMD --build -cc \
-	-O2 --x-assign fast --x-initial fast --noassert --trace --debug  #--public-flat-rw
+	-O2 --x-assign fast --x-initial fast --noassert --trace --debug  
+
 
 VFLAGS += $(VINCFLAGS)
 
@@ -63,7 +64,7 @@ $(BIN): $(VSRCS) $(CXXSRCS) $(COBJS)
 		$(addprefix --LDFLAGS , $(LIBS)) \
 		--Mdir $(OBJ_DIR) \
 		--exe $(CXXSRCS) $(COBJS) \
-		-o $(abspath $(BIN)) 
+		-o $(abspath $(BIN)) > /dev/null 
 
 # Shortcuts
 all: default

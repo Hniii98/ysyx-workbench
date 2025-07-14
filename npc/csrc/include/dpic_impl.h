@@ -10,7 +10,7 @@ extern "C" {
 	/* verilator to  C */
 	/* do not forget to set scope when using */
 	uint32_t npc_send_gprval(uint32_t index);
-	uint32_t npc_send_dnpc();
+	uint32_t npc_send_nextpc();
 	uint8_t  npc_send_rd();
 	uint8_t  npc_send_is_uncondjump();
 

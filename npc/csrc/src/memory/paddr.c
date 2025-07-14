@@ -3,6 +3,8 @@
 #include <host.h>
 #include <sim.h>
 
+#define RESET_VECTOR 0x80000000
+
 
 uint32_t builtin_img [] = {
   0x00500093, // addi x1, x0, 5   (x1 = x0 + 5)
@@ -19,7 +21,7 @@ uint32_t host_to_guest(uint8_t *haddr) {return haddr - pmem + CONFIG_MBASE;}
 
 void out_of_bound(uint32_t addr){
 	printf("address = " FMT_PADDR " is out of bound of pmem [" FMT_PADDR ", " FMT_PADDR " ] at pc = " FMT_WORD "\n",
-      addr, CONFIG_MBASE, CONFIG_MBASE+CONFIG_MSIZE-1, g_current_pc);
+      addr, CONFIG_MBASE, CONFIG_MBASE+CONFIG_MSIZE-1, g_frozen_pc);
 }
 
 /* memory access */

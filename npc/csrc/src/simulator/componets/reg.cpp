@@ -3,6 +3,8 @@
 #include <sim.hh>
 #include <verilator.h>
 #include <dpic_impl.h>
+#include <utils.h>
+#include <difftest-def.h>
 
 
 #define NR_REGS ARRLEN(regs_name)
@@ -31,4 +33,29 @@ extern "C" void sim_display_regs() {
         printf("\n");
     }
    
+}
+
+extern "C" bool sim_difftest_checkregs(uint32_t *ref_gpr, uint32_t ref_next_pc){
+    for(int i = 0; i < NR_REGS; i++){
+        uint32_t dut = sim_get_regval(i);
+        uint32_t ref = ref_gpr[i]; // 
+        if(ref != dut) return false;
+    }
+    uint32_t dut_next_pc = sim_get_nextpc();
+
+     
+    if(ref_next_pc != dut_next_pc) return false;
+
+    return true;
+}
+
+#include <paddr.h>
+/* get npc init state*/
+extern "C" void sim_send_initstate(CPU_state *dut_state){
+    for(int i = 0; i < NR_REGS; i++){
+        uint32_t dut = sim_get_regval(i);
+        dut_state->gpr[i] = dut;
+    }
+
+    dut_state->pc = RESET_VECTOR;
 }

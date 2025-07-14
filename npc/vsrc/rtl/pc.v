@@ -38,10 +38,10 @@ module pc (
     assign PC = pc_result_reg;
 
     /* DPI-C */
-    export "DPI-C" function npc_send_dnpc;
+    export "DPI-C" function npc_send_nextpc;
  
-    function int unsigned npc_send_dnpc();
-        npc_send_dnpc = pc_result_reg;
+    function int unsigned npc_send_nextpc();
+        npc_send_nextpc = pc_result_reg;
     endfunction
  
 endmodule

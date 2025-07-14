@@ -22,7 +22,7 @@ CFLAGS += $(CINCFLAGS)
 # Compile rules
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $@ 
 
 # Incremental compilation
 DEPS := $(COBJS:.o=.d)
