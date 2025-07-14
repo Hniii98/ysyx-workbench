@@ -12,11 +12,16 @@ CFLAGS    += -fdata-sections -ffunction-sections
 LDFLAGS   += -T $(AM_HOME)/scripts/linker.ld \
 						 --defsym=_pmem_start=0x80000000 --defsym=_entry_offset=0x0
 LDFLAGS   += --gc-sections -e _start
-NPCFLAGS +=  -e $(IMAGE).elf
+
+REF_SO_PATH := $(NEMU_HOME)/build/riscv32-nemu-interpreter-so
+NPCFLAGS +=  -e $(IMAGE).elf -d $(REF_SO_PATH)
 CFLAGS += -DMAINARGS=\"$(mainargs)\"
 
+# Define marco to enable trace and difftest in npc 
+# Set a certain value 1 to make marco IFDEF() valid.
 MARCO += -DCONFIG_ITRACE=1
 MARCO += -DCONFIG_FTRACE=1
+MARCO += -DCONFIG_DIFFTEST=1
 
 .PHONY: $(AM_HOME)/am/src/riscv/npc/trm.c
 
