@@ -16,6 +16,9 @@ extern "C" {
 
 	/* C to verilator */
 	void npc_reach_ret(int code);
+	uint32_t  npc_pmem_read(uint32_t raddr);
+	void npc_pmem_write(uint32_t waddr, uint32_t wdata, uint8_t wmask);
+	
 	
 	
 

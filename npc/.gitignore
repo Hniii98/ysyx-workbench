@@ -8,6 +8,6 @@
 !*.hh
 !.gitignore
 !README.md
-include/config
-include/generated
+!*.v
+!*.vh
 build/

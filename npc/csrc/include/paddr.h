@@ -1,6 +1,11 @@
 #ifndef __PADDR_H__
 #define __PADDR_H__
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <common.h>
 
 /* marco defination */
@@ -24,5 +29,12 @@ static inline bool in_pmem(uint32_t addr) {
 uint8_t* guest_to_host(uint32_t paddr);
 void init_mem();
 void out_of_bound(uint32_t paddr);
+
+uint32_t paddr_read(uint32_t addr, int len);
+void paddr_write(uint32_t addr, int len, uint32_t data);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
