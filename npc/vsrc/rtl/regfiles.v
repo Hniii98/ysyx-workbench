@@ -3,51 +3,55 @@ module regfiles(
     input clk, 
     input rst,
     input RegWEn,
-    input [4:0] addr_towrite,
-    input [4:0] addr_rs1,
-    input [4:0] addr_rs2,
-    input [31:0] data_towrite,
-    output [31:0] data_rs1, 
-    output [31:0] data_rs2,
-    output [31:0] data_x10 // for DPI-C return value in control.v
+    input [4:0] waddr,
+    input [4:0] raddr1,
+    input [4:0] raddr2,
+    input [31:0] wdata,
+    output [31:0] rdata1, 
+    output [31:0] rdata2,
+    output [31:0] x10_value // for DPI-C return value in control.v
 ); 
+    localparam REG_WIDTH = 32;
+    localparam REG_DEPTH = 32;
+
     /* General purpose regfiles */
-    reg [31:0] gpr [0:31];
+    reg [REG_WIDTH-1:0] gpr [0:REG_DEPTH-1];
 
     
     /* Define marco */
-    `define REG_GENERATE_MARCO(index) \
-        Reg #(32, 32'h0) u_reg_``index ( \
+    `define REG_GENERATE_MACRO(index) \
+        Reg #(32, 32'h0) u_reg``index ( \
             .clk(clk), \
             .rst(rst), \
-            .wen(RegWEn && (addr_towrite == 5'(index))), \
-            .din(data_towrite), \
+            .wen(RegWEn && (waddr == index)), \
+            .din(wdata), \
             .dout(gpr[index]) \
         )
 
-    /* Generate Reg 0  */
-    always @(*) begin
-        gpr[0] = 32'h0; // always zero
-    end
-    /* Generate Reg 1 ~ Reg 31 */
+    /* 
+     * Register 0 is hardwired to zero in RISC-V
+     * Registers 1-31 are implemented as flip-flops
+     */
+    assign gpr[0] = 32'h0;
+ 
     genvar i;
     generate
         for(i = 1; i < 32; i = i + 1) begin : gpr_gen_loop
-            `REG_GENERATE_MARCO(i);
+            `REG_GENERATE_MACRO(i);
         end
     endgenerate
 
     /* Assign output */
-    assign data_rs1 = gpr[addr_rs1];
-    assign data_rs2 = gpr[addr_rs2];
-    assign data_x10 = gpr[10];
+    assign rdata1 = gpr[raddr1];
+    assign rdata2 = gpr[raddr2];
+    assign x10_value = gpr[10];
 
 
     /*----------------------- DPI-C -----------------------*/
     export "DPI-C" function npc_send_gprval;
  
     function int unsigned npc_send_gprval(int unsigned index);
-        if (index < 32)
+        if (index < REG_DEPTH)
             npc_send_gprval = gpr[index];
         else
             npc_send_gprval = 0;

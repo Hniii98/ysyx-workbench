@@ -1,48 +1,58 @@
-`include "../templates/MuxKey.v"
+
 module pc (
     input clk,
     input rst,
-    input PCSel,     
+    input IsBr,
+    input BrTaken,
+    input IsJAL,
+    input IsJALR,
     input [31:0] alu_result,   
-    output [31:0] PC,          // current PC value
-    output [31:0] SNPC // static next pc
+    output [31:0] pc_current,   // current PC value for fetching instruction
+    output [31:0] pc_snpc // static next pc for writeback
     
-);
+);  
 
-    reg [31:0] pc_result_reg;         
-    wire [31:0] muxpc_result_wire;       
-    wire [31:0] snpc_result_wire;     
+    reg [31:0] pc_reg;
+    reg [31:0] next_pc;
 
-    /* Mux to select which be input of PC update logic */
-    MuxKey #(2, 1, 32) pc_input_mux (
-        .out(muxpc_result_wire),
-        .key(PCSel),
-        .lut({
-            1'b0, snpc_result_wire,   
-            1'b1, alu_result   
-        })
-    );
-
-    // PC update logic (synchronous reset)
-    always @(posedge clk) begin
-        if (rst) begin
-            pc_result_reg <= 32'h8000_0000;  // reset to boot address
-        end else begin
-            pc_result_reg <= muxpc_result_wire;
+    /* Next pc update logic */
+    always @(*) begin
+        if (IsJALR) begin 
+            next_pc = alu_result;      
+        end
+        else if (IsJAL) begin 
+            next_pc = alu_result;      
+        end
+        else if (IsBr && BrTaken) begin
+            next_pc = alu_result;     
+        end
+        else begin
+            next_pc = pc_reg + 32'h4;  
         end
     end
 
-    // Output assignments
-    assign snpc_result_wire = pc_result_reg + 32'h4; //  combinational logic adder
-    assign SNPC = snpc_result_wire;  // for register writeback (e.g., JAL)
-    assign PC = pc_result_reg;
+    
+    /* Current PC update logic (synchronous reset) */
+    always @(posedge clk) begin
+        if (rst)
+            pc_reg <= 32'h8000_0000;
+        else
+            pc_reg <= next_pc;
+    end
 
-    /* DPI-C */
+    /* Output assignment */
+    assign pc_current = pc_reg;
+    assign pc_snpc= pc_reg + 32'h4; // jal and jalr instruction need this result.
+
+
+
+    /* ------------------------- DPI-C ------------------------------*/
     export "DPI-C" function npc_send_nextpc;
  
     function int unsigned npc_send_nextpc();
-        npc_send_nextpc = pc_result_reg;
+        npc_send_nextpc = next_pc;
     endfunction
  
 endmodule
+
 

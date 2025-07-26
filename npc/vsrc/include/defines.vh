@@ -56,6 +56,19 @@
 `define MEM_WRITE 1'b1
 
 
+/* Branch instructions type */
+// aligned to funct3 part in B type instructions
+`define BRANCH_BEQ  3'b000
+`define BRANCH_BNE  3'b001
+`define BRANCH_BLT  3'b100
+`define BRANCH_BGE  3'b101
+`define BRANCH_BLTU 3'b110
+`define BRANCH_BGEU 3'b111
+
+`define BRANCH_TAKEN 	1'b1
+`define BRANCH_UNTAKEN  1'b0
+
+
 /* Control the source of data that write to regfiles */
 `define WRITEBACK_FROM_SNPC		2'b00
 `define WRITEBACK_FROM_ALU		2'b01

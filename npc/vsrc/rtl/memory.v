@@ -19,7 +19,7 @@ module memory(
 
 	
 	/* Memory read logic */
-	wire [31:0] raw_data;
+	reg [31:0] raw_data;
 	wire [31:0] signed_byte;
 	wire [31:0] signed_halfword;
 	wire [31:0] unsigned_byte;

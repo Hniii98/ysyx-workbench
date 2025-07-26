@@ -5,20 +5,21 @@ module control(
     input clk,
     input [31:0] inst, 
     input [31:0] data_x10, // data of reg x10, we need this value for ret.
-    input BrLt,   // branch less than from module branch
-    input BrEq,   // branch equal from module branch
-    output PCSrc,  
     output [2:0] ImmType,  
     output RegWEn, 
     output ASrc, 
     output BSrc, 
     output [3:0] ALUOp, 
-    output MemRW, 
-    output [1:0] WriteSrc, 
+    output MemRW, // memory write or read
+    output [1:0] WriteSrc, // write back module data source
     output IsSigned, // whether the operaton is signed 
-    output [1:0] DataSize  // data size of load/store instructions 
+    output [1:0] DataSize,  // data size of load/store instructions 
+    output [2:0] BrOp, // branch option
+    output IsBr,  // whether instruction is branch  
+    output IsJAL, // whether instruction is jal
+    output IsJALR
 );
-    /* Slice instrcution */
+    /* Slice instrcution bits */
     wire [6:0] opcode;
     wire [2:0] funct3;
     wire [6:0] funct7;
@@ -54,24 +55,25 @@ module control(
             7'b011_0011, `R_TYPE  // (logic and arithmetic oprations)
             })
     );
- 
 
-    /* Level two decoder of certain type instruction */
-    localparam [13:0] DEFAULT_CTRL_SIGNALS = 14'h0; // safe control signals for illegal instrutions
-    
+    /* 13 bits basic control signals decoder for instructions, including {RegWEN, 
+        ASrc, BSrc, ALUOp, MemRW, WriteSrc, IsSigned, DataSize} . */
+
+    localparam [12:0] DEFAULT_CTRL_SIGNALS = 13'h0; // safe control signals for illegal instrutions
+   
     /* U-type instructions decoder */
-    wire [13:0] utype_ctrl_wire; // excluing immediate value type signals
+    wire [12:0] utype_ctrl_wire; // excluing immediate value type signals
     
-    MuxKeyWithDefault #(2, 1, 14) utype_ctrl_mux (
+    MuxKeyWithDefault #(2, 1, 13) utype_ctrl_mux (
         .out(utype_ctrl_wire),
         .key(opcode[5]),
         .default_out(DEFAULT_CTRL_SIGNALS),
         .lut({
-            1'b1, {`PC_FROM_SNPC        , `REG_WRITABLE , `OPA_FROM_NCARE , 
+            1'b1, {                       `REG_WRITABLE , `OPA_FROM_NCARE , 
                     `OPB_FROM_IMM       , `ALU_PASS     , `MEM_READ       ,
                     `WRITEBACK_FROM_ALU , `TYPE_NCARE   , `DATASIZE_NCARE},  // lui
 
-            1'b0, {`PC_FROM_SNPC        , `REG_WRITABLE , `OPA_FROM_PC   ,
+            1'b0, {                       `REG_WRITABLE , `OPA_FROM_PC   ,
                     `OPB_FROM_IMM       , `ALU_ADD      , `MEM_READ      ,
                     `WRITEBACK_FROM_ALU , `TYPE_NCARE   , `DATASIZE_NCARE}  // auipc
         })
@@ -80,29 +82,29 @@ module control(
     );
 
     /* J-type instrcutions decoder */
-    wire [13:0] jtype_ctrl_wire;
+    wire [12:0] jtype_ctrl_wire;
 
-    MuxKeyWithDefault #(1, 3, 14) jtype_ctrl_mux (
+    MuxKeyWithDefault #(1, 3, 13) jtype_ctrl_mux (
         .out(jtype_ctrl_wire),
         .key(imm_type_wire),
         .default_out(DEFAULT_CTRL_SIGNALS),
         .lut({
-            `J_TYPE, {`PC_FROM_ALU ,        `REG_WRITABLE, `OPA_FROM_PC    , 
-                      `OPB_FROM_IMM,        `ALU_ADD     , `MEM_READ       ,
+            `J_TYPE, {                      `REG_WRITABLE, `OPA_FROM_PC    , 
+                      `OPB_FROM_IMM       , `ALU_ADD     , `MEM_READ       ,
                       `WRITEBACK_FROM_SNPC, `TYPE_NCARE  , `DATASIZE_NCARE}
         })
     );
 
 
     /* I-type instructions decoder */
-    wire [13:0] itype_ctrl_wire;
+    wire [12:0] itype_ctrl_wire;
 
     localparam ITYPE_UNCONDJUMP = 3'b000; // unconditional jump
-    localparam ITYPE_LOAD       = 3'b001;
+    localparam ITYPE_LOAD       = 3'b001; // memory load instructions
     localparam ITYPE_OPERATION  = 3'b010; // including logic and arithmetic operations
     localparam ITYPE_DEFAULT    = 3'b011; // fencexx/csrxx/exxx clasified here
 
-    // 1. Clasify I-type instructions to 4 sub types 
+    //  divide I-type instructions to 4 sub types 
     wire [2:0] itype_subtype_wire;
     MuxKeyWithDefault #(5, 7, 3) itype_subtype_mux ( 
         .out(itype_subtype_wire),
@@ -117,110 +119,110 @@ module control(
         })
     );
 
-    // 2. Decoder for subtype  of I-type
+    //  Decoder for subtype of I-type
 
-    //ITYPE_UNCONDJUM
-    wire[13:0] ijump_ctrl_wire;
-    assign ijump_ctrl_wire = {`PC_FROM_ALU        ,  `REG_WRITABLE, `OPA_FROM_RS1    , 
+    // ITYPE_UNCONDJUM decode logic
+    wire[12:0] ijump_ctrl_wire;
+    assign ijump_ctrl_wire = {                       `REG_WRITABLE, `OPA_FROM_RS1    , 
                               `OPB_FROM_IMM       ,  `ALU_ADD     , `MEM_READ        ,
                               `WRITEBACK_FROM_SNPC,  `TYPE_NCARE  , `DATASIZE_NCARE  };
 
 
-    // ITYPE_LOAD 
-    wire[13:0] iload_ctrl_wire;
-    MuxKeyWithDefault #(5, 3, 14) iload_ctrl_mux(
+    // ITYPE_LOAD decode logic
+    wire[12:0] iload_ctrl_wire;
+    MuxKeyWithDefault #(5, 3, 13) iload_ctrl_mux(
         .out(iload_ctrl_wire),
         .key(funct3),
         .default_out(DEFAULT_CTRL_SIGNALS),
         .lut({
-            3'b000, {`PC_FROM_SNPC       ,  `REG_WRITABLE, `OPA_FROM_RS1    , 
+            3'b000, {                       `REG_WRITABLE, `OPA_FROM_RS1    , 
                      `OPB_FROM_IMM       ,  `ALU_ADD     , `MEM_READ        ,
                      `WRITEBACK_FROM_MEM ,  `TYPE_SIGNED , `DATASIZE_BYTE   }, // lb
 
-            3'b001, {`PC_FROM_SNPC       ,  `REG_WRITABLE, `OPA_FROM_RS1    ,
+            3'b001, {                       `REG_WRITABLE, `OPA_FROM_RS1    ,
                      `OPB_FROM_IMM       ,  `ALU_ADD     , `MEM_READ        ,
                      `WRITEBACK_FROM_MEM ,  `TYPE_SIGNED , `DATASIZE_HALWORD}, // lh
 
-            3'b010, {`PC_FROM_SNPC       ,  `REG_WRITABLE, `OPA_FROM_RS1    ,
+            3'b010, {                       `REG_WRITABLE, `OPA_FROM_RS1    ,
                      `OPB_FROM_IMM       ,  `ALU_ADD     , `MEM_READ        ,
                      `WRITEBACK_FROM_MEM ,  `TYPE_SIGNED , `DATASIZE_WORD   }, // lw
 
-            3'b100, {`PC_FROM_SNPC       , `REG_WRITABLE , `OPA_FROM_RS1    ,
+            3'b100, {                      `REG_WRITABLE , `OPA_FROM_RS1    ,
                      `OPB_FROM_IMM       , `ALU_ADD      , `MEM_READ        ,
                      `WRITEBACK_FROM_MEM , `TYPE_UNSIGNED, `DATASIZE_BYTE   }, // lbu
 
-            3'b101, {`PC_FROM_SNPC       , `REG_WRITABLE , `OPA_FROM_RS1    ,
+            3'b101, {                      `REG_WRITABLE , `OPA_FROM_RS1    ,
                      `OPB_FROM_IMM       , `ALU_ADD      , `MEM_READ        ,
                      `WRITEBACK_FROM_MEM , `TYPE_UNSIGNED, `DATASIZE_HALWORD} // lhu
 
         })
     );
 
-    // ITYPE_OPERATION 
-    wire[13:0] iop_ctrl_wire;
+    // ITYPE_OPERATION decode logic
+    wire[12:0] iop_ctrl_wire;
 
     // ITYPE_OPERATION need to divide to two part
-    wire[13:0] iop_main_ctrl_wire;
-    wire[13:0] iop_shiftr_ctrl_wire;
+    wire[12:0] iop_basic_ctrl_wire;
+    wire[12:0] iop_shiftr_ctrl_wire;
   
-    // Main ITYPE_OPERATION 
-    MuxKeyWithDefault #(7, 3, 14) iop_main_ctrl_mux( 
-        .out(iop_main_ctrl_wire), 
+    // Basic ITYPE_OPERATION 
+    MuxKeyWithDefault #(7, 3, 13) iop_basic_ctrl_mux( 
+        .out(iop_basic_ctrl_wire), 
         .key(funct3),
         .default_out(DEFAULT_CTRL_SIGNALS),
         .lut({
-            3'b000, {`PC_FROM_SNPC       ,  `REG_WRITABLE, `OPA_FROM_RS1    , 
+            3'b000, {                       `REG_WRITABLE, `OPA_FROM_RS1    , 
                      `OPB_FROM_IMM       ,  `ALU_ADD     , `MEM_READ        ,
                      `WRITEBACK_FROM_ALU ,  `TYPE_NCARE  , `DATASIZE_NCARE  }, // addi
 
-            3'b010, {`PC_FROM_SNPC       ,  `REG_WRITABLE, `OPA_FROM_RS1    ,
+            3'b010, {                       `REG_WRITABLE, `OPA_FROM_RS1    ,
                      `OPB_FROM_IMM       ,  `ALU_SLT     , `MEM_READ        ,
                      `WRITEBACK_FROM_ALU ,  `TYPE_SIGNED , `DATASIZE_NCARE  }, // slti
 
-            3'b011, {`PC_FROM_SNPC       ,  `REG_WRITABLE , `OPA_FROM_RS1    ,
+            3'b011, {                       `REG_WRITABLE , `OPA_FROM_RS1    ,
                      `OPB_FROM_IMM       ,  `ALU_SLT      , `MEM_READ        ,
                      `WRITEBACK_FROM_ALU ,  `TYPE_UNSIGNED, `DATASIZE_NCARE }, // sltiu
 
-            3'b100, {`PC_FROM_SNPC       , `REG_WRITABLE , `OPA_FROM_RS1    ,
+            3'b100, {                      `REG_WRITABLE , `OPA_FROM_RS1    ,
                      `OPB_FROM_IMM       , `ALU_XOR      , `MEM_READ        ,
                      `WRITEBACK_FROM_ALU , `TYPE_NCARE   , `DATASIZE_NCARE },  // xori
 
-            3'b110, {`PC_FROM_SNPC       , `REG_WRITABLE , `OPA_FROM_RS1    ,
+            3'b110, {                      `REG_WRITABLE , `OPA_FROM_RS1    ,
                      `OPB_FROM_IMM       , `ALU_OR       , `MEM_READ        ,
                      `WRITEBACK_FROM_ALU , `TYPE_NCARE   , `DATASIZE_NCARE  },  // ori
 
-            3'b111, {`PC_FROM_SNPC       , `REG_WRITABLE , `OPA_FROM_RS1    ,
+            3'b111, {                      `REG_WRITABLE , `OPA_FROM_RS1    ,
                      `OPB_FROM_IMM       , `ALU_AND      , `MEM_READ        ,
                      `WRITEBACK_FROM_ALU , `TYPE_NCARE   , `DATASIZE_NCARE },  // andi
 
-            3'b001, {`PC_FROM_SNPC       , `REG_WRITABLE , `OPA_FROM_RS1    ,
+            3'b001, {                      `REG_WRITABLE , `OPA_FROM_RS1    ,
                      `OPB_FROM_IMM       , `ALU_SHIFL    , `MEM_READ        ,
                      `WRITEBACK_FROM_ALU , `TYPE_NCARE   , `DATASIZE_NCARE }  // slli
         })
     );
 
     // Shift right instruction of subtype ITYPE_OPERATION   
-    MuxKeyWithDefault #(2, 1, 14) iop_shiftr_ctrl_mux( 
+    MuxKeyWithDefault #(2, 1, 13) iop_shiftr_ctrl_mux( 
         .out(iop_shiftr_ctrl_wire),
         .key(funct7[5]),
         .default_out(DEFAULT_CTRL_SIGNALS),
         .lut({
-            1'b0, {`PC_FROM_SNPC       , `REG_WRITABLE , `OPA_FROM_RS1    ,
+            1'b0, {                      `REG_WRITABLE , `OPA_FROM_RS1    ,
                    `OPB_FROM_IMM       , `ALU_SHIFR    , `MEM_READ        ,
                    `WRITEBACK_FROM_ALU , `TYPE_UNSIGNED, `DATASIZE_NCARE },  // srli
 
-            1'b1, {`PC_FROM_SNPC       , `REG_WRITABLE , `OPA_FROM_RS1    ,
+            1'b1, {                      `REG_WRITABLE , `OPA_FROM_RS1    ,
                    `OPB_FROM_IMM       , `ALU_SHIFR    , `MEM_READ        ,
                    `WRITEBACK_FROM_ALU , `TYPE_SIGNED  , `DATASIZE_NCARE }  // srai        
         })
     );
 
-    // select final iop control signals
-    assign iop_ctrl_wire = (funct3 == 3'b101) ? iop_shiftr_ctrl_wire : iop_main_ctrl_wire;
+    // Select final iop control signals output
+    assign iop_ctrl_wire = (funct3 == 3'b101) ? iop_shiftr_ctrl_wire : iop_basic_ctrl_wire;
 
 
     // I-type final control signals mux
-    MuxKeyWithDefault #(4, 3, 14) itype_ctrl_mux( 
+    MuxKeyWithDefault #(4, 3, 13) itype_ctrl_mux( 
         .out(itype_ctrl_wire),
         .key(itype_subtype_wire),
         .default_out(DEFAULT_CTRL_SIGNALS),
@@ -235,142 +237,118 @@ module control(
 
 
     /* S-type instructions decoder */
-    wire [13:0] stype_ctrl_wire;
+    wire [12:0] stype_ctrl_wire;
 
-    MuxKeyWithDefault #(3, 3, 14) stype_ctrl_mux( 
+    MuxKeyWithDefault #(3, 3, 13) stype_ctrl_mux( 
         .out(stype_ctrl_wire),
         .key(funct3),
         .default_out(DEFAULT_CTRL_SIGNALS),
         .lut({
-            3'b000, {`PC_FROM_SNPC       , `REG_UNWRITABLE , `OPA_FROM_RS1   ,
+            3'b000, {                    `REG_UNWRITABLE , `OPA_FROM_RS1   ,
                      `OPB_FROM_IMM       , `ALU_ADD        , `MEM_WRITE      ,
                      `WRITEBACK_FROM_ALU , `TYPE_NCARE     , `DATASIZE_BYTE },  // sb
 
-            3'b001, {`PC_FROM_SNPC       , `REG_UNWRITABLE , `OPA_FROM_RS1      ,
+            3'b001, {                      `REG_UNWRITABLE , `OPA_FROM_RS1      ,
                      `OPB_FROM_IMM       , `ALU_ADD        , `MEM_WRITE         ,
                      `WRITEBACK_FROM_ALU , `TYPE_NCARE     , `DATASIZE_HALWORD },  // sh
 
-            3'b010, {`PC_FROM_SNPC       , `REG_UNWRITABLE , `OPA_FROM_RS1  ,
+            3'b010, {                      `REG_UNWRITABLE , `OPA_FROM_RS1  ,
                      `OPB_FROM_IMM       , `ALU_ADD        , `MEM_WRITE     ,
                      `WRITEBACK_FROM_ALU , `TYPE_NCARE     , `DATASIZE_WORD }  // sw
         })
     );    
 
-    /* R-type instructions decode */
+    /* R-type instructions decoder */
+    wire [12:0] rtype_ctrl_wire;
 
-    wire [13:0] rtype_ctrl_wire;
-
-    MuxKeyWithDefault #(10, 4, 14) rtype_ctrl_mux(
+    MuxKeyWithDefault #(10, 4, 13) rtype_ctrl_mux(
         .out(rtype_ctrl_wire),
         .key({funct3, funct7[5]}),
         .default_out(DEFAULT_CTRL_SIGNALS),
         .lut({
-            {3'b000, 1'b0}, {`PC_FROM_SNPC       , `REG_WRITABLE   , `OPA_FROM_RS1    ,
+            {3'b000, 1'b0}, {                      `REG_WRITABLE   , `OPA_FROM_RS1    ,
                              `OPB_FROM_RS2       , `ALU_ADD        , `MEM_READ        ,
                              `WRITEBACK_FROM_ALU , `TYPE_NCARE     , `DATASIZE_NCARE },  // add
 
-            {3'b000, 1'b1}, {`PC_FROM_SNPC       , `REG_WRITABLE   , `OPA_FROM_RS1    ,
+            {3'b000, 1'b1}, {                      `REG_WRITABLE   , `OPA_FROM_RS1    ,
                              `OPB_FROM_RS2       , `ALU_SUB        , `MEM_READ        ,
                              `WRITEBACK_FROM_ALU , `TYPE_NCARE     , `DATASIZE_NCARE },  // sub
 
-            {3'b001, 1'b0}, {`PC_FROM_SNPC       , `REG_WRITABLE   , `OPA_FROM_RS1    ,
+            {3'b001, 1'b0}, {                      `REG_WRITABLE   , `OPA_FROM_RS1    ,
                              `OPB_FROM_RS2       , `ALU_SHIFL      , `MEM_READ        ,
                              `WRITEBACK_FROM_ALU , `TYPE_NCARE     , `DATASIZE_NCARE },  // sll
 
-            {3'b010, 1'b0}, {`PC_FROM_SNPC       , `REG_WRITABLE   , `OPA_FROM_RS1    ,
+            {3'b010, 1'b0}, {                      `REG_WRITABLE   , `OPA_FROM_RS1    ,
                              `OPB_FROM_RS2       , `ALU_SLT        , `MEM_READ        ,
                              `WRITEBACK_FROM_ALU , `TYPE_SIGNED    , `DATASIZE_NCARE },  // slt
 
-            {3'b011, 1'b0}, {`PC_FROM_SNPC       , `REG_WRITABLE   , `OPA_FROM_RS1    ,
+            {3'b011, 1'b0}, {                      `REG_WRITABLE   , `OPA_FROM_RS1    ,
                              `OPB_FROM_RS2       , `ALU_SLT        , `MEM_READ        ,
                              `WRITEBACK_FROM_ALU , `TYPE_UNSIGNED  , `DATASIZE_NCARE },  // sltu
 
-            {3'b100, 1'b0}, {`PC_FROM_SNPC       , `REG_WRITABLE   , `OPA_FROM_RS1    ,
+            {3'b100, 1'b0}, {                      `REG_WRITABLE   , `OPA_FROM_RS1    ,
                              `OPB_FROM_RS2       , `ALU_XOR        , `MEM_READ        ,
                              `WRITEBACK_FROM_ALU , `TYPE_NCARE     , `DATASIZE_NCARE },  // xor
 
-            {3'b101, 1'b0}, {`PC_FROM_SNPC       , `REG_WRITABLE   , `OPA_FROM_RS1    ,
+            {3'b101, 1'b0}, {                      `REG_WRITABLE   , `OPA_FROM_RS1    ,
                              `OPB_FROM_RS2       , `ALU_SHIFR      , `MEM_READ        ,
                              `WRITEBACK_FROM_ALU , `TYPE_UNSIGNED  , `DATASIZE_NCARE },  // srl
 
-            {3'b101, 1'b1}, {`PC_FROM_SNPC       , `REG_WRITABLE   , `OPA_FROM_RS1    ,
+            {3'b101, 1'b1}, {                      `REG_WRITABLE   , `OPA_FROM_RS1    ,
                              `OPB_FROM_RS2       , `ALU_SHIFR      , `MEM_READ        ,
                              `WRITEBACK_FROM_ALU , `TYPE_SIGNED    , `DATASIZE_NCARE },  // sra
 
-            {3'b110, 1'b0}, {`PC_FROM_SNPC       , `REG_WRITABLE   , `OPA_FROM_RS1    ,
+            {3'b110, 1'b0}, {                      `REG_WRITABLE   , `OPA_FROM_RS1    ,
                              `OPB_FROM_RS2       , `ALU_OR         , `MEM_READ        ,
                              `WRITEBACK_FROM_ALU , `TYPE_NCARE     , `DATASIZE_NCARE },  // or
 
-            {3'b111, 1'b0}, {`PC_FROM_SNPC       , `REG_WRITABLE   , `OPA_FROM_RS1    ,
+            {3'b111, 1'b0}, {                      `REG_WRITABLE   , `OPA_FROM_RS1    ,
                              `OPB_FROM_RS2       , `ALU_AND        , `MEM_READ        ,
                              `WRITEBACK_FROM_ALU , `TYPE_NCARE     , `DATASIZE_NCARE }   // and         
         })
     );
     
     /* B-type instructions decoder */
-    wire [13:0] btype_default_ctrl_wire;
+    wire [12:0] btype_ctrl_wire;
 
     // PCsrc signals in b type instructions decoded to PC_FROM_SNPC as default.
-    MuxKeyWithDefault #(6, 3, 14) btype_ctrl_mux(
-        .out(btype_default_ctrl_wire),
+    MuxKeyWithDefault #(6, 3, 13) btype_ctrl_mux(
+        .out(btype_ctrl_wire),
         .key(funct3),
         .default_out(DEFAULT_CTRL_SIGNALS),
         .lut({
-            3'b000,    {`PC_FROM_SNPC        , `REG_UNWRITABLE , `OPA_FROM_PC     ,
+            3'b000,    {                       `REG_UNWRITABLE , `OPA_FROM_PC     ,
                         `OPB_FROM_IMM        , `ALU_ADD        , `MEM_READ        ,
                         `WRITEBACK_FROM_NCARE, `TYPE_NCARE     , `DATASIZE_NCARE },  // beq
 
-            3'b001,    {`PC_FROM_SNPC        , `REG_UNWRITABLE , `OPA_FROM_PC     ,
+            3'b001,    {                       `REG_UNWRITABLE , `OPA_FROM_PC     ,
                         `OPB_FROM_IMM        , `ALU_ADD        , `MEM_READ        ,
                         `WRITEBACK_FROM_NCARE, `TYPE_NCARE     , `DATASIZE_NCARE },  // bne
 
-            3'b100,    {`PC_FROM_SNPC        , `REG_UNWRITABLE , `OPA_FROM_PC     ,
+            3'b100,    {                       `REG_UNWRITABLE , `OPA_FROM_PC     ,
                         `OPB_FROM_IMM        , `ALU_ADD        , `MEM_READ        ,
-                        `WRITEBACK_FROM_NCARE, `TYPE_SIGNED     , `DATASIZE_NCARE },  // blt
+                        `WRITEBACK_FROM_NCARE, `TYPE_SIGNED    , `DATASIZE_NCARE },  // blt
 
-            3'b101,    {`PC_FROM_SNPC        , `REG_UNWRITABLE , `OPA_FROM_PC     ,
+            3'b101,    {                       `REG_UNWRITABLE , `OPA_FROM_PC     ,
                         `OPB_FROM_IMM        , `ALU_ADD        , `MEM_READ        ,
                         `WRITEBACK_FROM_NCARE, `TYPE_SIGNED    , `DATASIZE_NCARE },  // bge
 
-            3'b110,    {`PC_FROM_SNPC        , `REG_UNWRITABLE , `OPA_FROM_PC     ,
+            3'b110,    {                       `REG_UNWRITABLE , `OPA_FROM_PC     ,
                         `OPB_FROM_IMM        , `ALU_ADD        , `MEM_READ        ,
                         `WRITEBACK_FROM_NCARE, `TYPE_UNSIGNED  , `DATASIZE_NCARE },  // bltu
 
-            3'b111,    {`PC_FROM_SNPC        , `REG_UNWRITABLE , `OPA_FROM_PC     ,
+            3'b111,    {                       `REG_UNWRITABLE , `OPA_FROM_PC     ,
                         `OPB_FROM_IMM        , `ALU_ADD        , `MEM_READ        ,
                         `WRITEBACK_FROM_NCARE, `TYPE_UNSIGNED  , `DATASIZE_NCARE }  // bgeu
 
         })
     );
-    
-    /* Branch taken signals*/
-    wire  branch_taken;  
-    MuxKeyWithDefault #(6, 3, 1) branch_taken_mux(
-        .out(branch_taken),
-        .key(funct3),
-        .default_out(1'b0),
-        .lut({
-            3'b000,  BrEq,  // beq
-            3'b001, ~BrEq,  // bne
-            3'b100,  BrLt,  // blt
-            3'b101, ~BrLt,  // bge
-            3'b110,  BrLt,  // bltu
-            3'B111, ~BrLt   // bgeu
-        })
-    );
-
-    /* Btype final control signals */
-    wire[13:0] btype_ctrl_wire;
-    
-    assign btype_ctrl_wire[13] = branch_taken ? `PC_FROM_ALU : btype_default_ctrl_wire[13];
-    assign btype_ctrl_wire[12:0] = btype_default_ctrl_wire[12:0]; 
-     
 
 
-    /* Ctrl signals mux */
-    wire [13:0] ctrl_wire;
+    /* Basic control signals final output  mux */
+    wire [12:0] ctrl_wire;
 
-    MuxKeyWithDefault #(6, 3, 14) final_ctrl_mux (
+    MuxKeyWithDefault #(6, 3, 13) final_ctrl_mux (
         .out(ctrl_wire),
         .key(imm_type_wire),
         .default_out(DEFAULT_CTRL_SIGNALS),
@@ -385,8 +363,18 @@ module control(
     );
     
 
-    /* Connect to ouput signals */
-    assign {PCSrc, RegWEn, ASrc, BSrc, ALUOp, MemRW, WriteSrc, IsSigned, DataSize} = ctrl_wire; 
+
+
+    /* Assignment */
+    assign {RegWEn, ASrc, BSrc, ALUOp, MemRW, WriteSrc, IsSigned, DataSize} = ctrl_wire; // compose signals
+
+    assign IsJAL = (imm_type_wire == `J_TYPE);
+    assign IsJALR = (itype_subtype_wire == ITYPE_UNCONDJUMP);
+
+
+
+    assign BrOp = funct3;
+    assign IsBr = (imm_type_wire == `B_TYPE);
     assign ImmType = imm_type_wire;
 
 

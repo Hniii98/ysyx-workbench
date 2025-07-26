@@ -88,7 +88,8 @@ void npc_exec_once(){
 
 #ifdef CONFIG_FTRACE
 	bool ftrace_enable = sim_get_is_uncondjump();
-	uint32_t dnpc = sim_get_nextpc();
+	uint32_t dnpc = sim_get_nextpc(); // dynamic next pc, prepared pc for the coming
+									  // next rising edge after execution a instruction
 	uint8_t rd = sim_get_rd();
 
 	if(ftrace_enable){
