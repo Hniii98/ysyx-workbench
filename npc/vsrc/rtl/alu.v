@@ -72,7 +72,7 @@ module alu(
         .key({ALUOp, IsSigned}),
         .default_out(32'hxxxx_xxxx),
         .lut({
-            {`ALU_SHIFR, `TYPE_SIGNED}   , $signed(mux_a_wire) >> shamt,
+            {`ALU_SHIFR, `TYPE_SIGNED}   , $signed(mux_a_wire) >>> shamt,
             {`ALU_SHIFR, `TYPE_UNSIGNED} , mux_a_wire >> shamt,
             {`ALU_SLT  , `TYPE_SIGNED}   , {31'b0, signed_lessthan}, // extend to 32 bits
             {`ALU_SLT  , `TYPE_UNSIGNED} , {31'b0, unsigned_lessthan} // extend to 32 bits
