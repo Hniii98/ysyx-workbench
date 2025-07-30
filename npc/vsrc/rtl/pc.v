@@ -13,7 +13,10 @@ module pc (
 );  
 
     reg [31:0] pc_reg;
+    wire [31:0] static_next_pc;
     reg [31:0] next_pc;
+
+    assign static_next_pc = pc_reg + 32'h4;
 
     /* Next pc update logic */
     always @(*) begin
@@ -27,7 +30,7 @@ module pc (
             next_pc = alu_result;     
         end
         else begin
-            next_pc = pc_reg + 32'h4;  
+            next_pc = static_next_pc;
         end
     end
 
@@ -50,7 +53,10 @@ module pc (
     export "DPI-C" function npc_send_nextpc;
  
     function int unsigned npc_send_nextpc();
-        npc_send_nextpc = next_pc;
+        npc_send_nextpc = pc_reg; 
+        /* pc_reg is non blocking assignment value. We usually get_nextpc after a 
+            single step, so pc_reg represent the updated next pc. 
+        */
     endfunction
  
 endmodule
