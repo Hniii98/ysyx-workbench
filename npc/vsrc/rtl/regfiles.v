@@ -9,7 +9,7 @@ module regfiles(
     input [31:0] wdata,
     output [31:0] rdata1, 
     output [31:0] rdata2,
-    output [31:0] x10_value // for DPI-C return value in control.v
+    output [31:0] x10_data // for DPI-C return value in control.v
 ); 
     localparam REG_WIDTH = 32;
     localparam REG_DEPTH = 32;
@@ -44,7 +44,7 @@ module regfiles(
     /* Assign output */
     assign rdata1 = gpr[raddr1];
     assign rdata2 = gpr[raddr2];
-    assign x10_value = gpr[10];
+    assign x10_data = gpr[10];
 
 
     /*----------------------- DPI-C -----------------------*/

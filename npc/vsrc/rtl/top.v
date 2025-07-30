@@ -53,6 +53,18 @@ module top(
     wire        branch_brtaken;
 
 
+    // /* Keep instructions same in a cycle */
+    // always @(posedge clk or posedge rst) begin
+    //     if (rst)
+    //         inst_reg <= 32'b0;
+    //     else
+    //         inst_reg <= inst;  // 锁存指令
+    // end
+
+    // assign inst_rd  = inst_reg[11:7];
+    // assign inst_rs1 = inst_reg[19:15];
+    // assign inst_rs2 = inst_reg[24:20];
+
     /* PC  */
     pc u_pc(
         .clk            (clk),
@@ -91,13 +103,13 @@ module top(
         .clk            (clk),
         .rst            (rst),
         .RegWEn         (control_regwen),
-        .addr_towrite   (inst_rd),
-        .addr_rs1       (inst_rs1),
-        .addr_rs2       (inst_rs2),
-        .data_towrite   (writeback_data_out), // data from writeback module
-        .data_rs1       (regfiles_rs1_data),
-        .data_rs2       (regfiles_rs2_data),
-        .data_x10       (regfiles_x10_data)
+        .waddr  (inst_rd),
+        .raddr1       (inst_rs1),
+        .raddr2       (inst_rs2),
+        .wdata   (writeback_data_out), // data from writeback module
+        .rdata1       (regfiles_rs1_data),
+        .rdata2       (regfiles_rs2_data),
+        .x10_data      (regfiles_x10_data)
     );
 
     /* Immgen */

@@ -39,12 +39,26 @@ extern "C" bool sim_difftest_checkregs(uint32_t *ref_gpr, uint32_t ref_next_pc){
     for(int i = 0; i < NR_REGS; i++){
         uint32_t dut = sim_get_regval(i);
         uint32_t ref = ref_gpr[i]; // 
-        if(ref != dut) return false;
+        if(ref != dut){
+            printf(" gpr[%d] should be " ANSI_FMT(FMT_WORD, ANSI_FG_GREEN)
+                " but be " ANSI_FMT(FMT_WORD, ANSI_FG_RED) ".\n",
+                i, 
+                ref, 
+                dut);
+    return false;
+        } 
     }
+
     uint32_t dut_next_pc = sim_get_nextpc();
 
      
-    if(ref_next_pc != dut_next_pc) return false;
+    if(ref_next_pc != dut_next_pc){
+         printf(" pc should be " ANSI_FMT(FMT_WORD, ANSI_FG_GREEN)
+                " but be " ANSI_FMT(FMT_WORD, ANSI_FG_RED) ".\n",
+                ref_next_pc, 
+                dut_next_pc);
+        return false;
+    } 
 
     return true;
 }

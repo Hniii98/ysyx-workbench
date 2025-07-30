@@ -41,17 +41,13 @@ void init_mem(){
 }
 
 uint32_t paddr_read(uint32_t addr, int len) {
-	
-	
 	if(likely(in_pmem(addr))) return pmem_read(addr, len);
-	out_of_bound(addr);
+	//out_of_bound(addr);
 	return 0;
 }
 
 void paddr_write(uint32_t addr, int len, uint32_t data){
-	
-
 	if(likely(in_pmem(addr))) { pmem_write(addr, len, data); return;}
-	out_of_bound(addr);
+	//out_of_bound(addr);
 	return ;
 }

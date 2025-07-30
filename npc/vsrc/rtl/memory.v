@@ -2,7 +2,7 @@
 import "DPI-C" function int unsigned npc_pmem_read(input  int unsigned  raddr);
 import "DPI-C" function void npc_pmem_write(input int unsigned waddr,
 										input int unsigned  wdata,
-										input byte wmask);
+										input byte unsigned wmask);
 
 `include "../include/defines.vh"
 `include "../templates/MuxKeyWithDefault.v"
@@ -44,7 +44,7 @@ module memory(
 
 	always @(*) begin
 		if(MemRW == `MEM_READ) begin
-			raw_data = npc_pmem_read(addr & ~32'h3); // align to four byte
+			raw_data = npc_pmem_read(addr); // align to four byte
 		end
 		else begin
 			raw_data = 32'h0;
@@ -73,6 +73,15 @@ module memory(
 			npc_pmem_write(addr, data_towrite, mask);
 		end
 	end
+
+
+
+
+	// always @(posedge clk) begin
+	// 	if(MemRW == `MEM_WRITE) begin
+	// 		npc_pmem_write(addr & ~32'h3, data_towrite, mask);
+	// 	end
+	// end
 
 
 
