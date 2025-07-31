@@ -14,14 +14,19 @@ LDFLAGS   += -T $(AM_HOME)/scripts/linker.ld \
 LDFLAGS   += --gc-sections -e _start
 
 REF_SO_PATH := $(NEMU_HOME)/build/riscv32-nemu-interpreter-so
-NPCFLAGS +=  -e $(IMAGE).elf -d $(REF_SO_PATH)
+
+# -e  elf file path to npc.
+# -d  .so files of NEMU (compile in nemu with corresponding Kconfig).
+# -b  npc execute instructions in batch mode. (if you need step mode, comment it)
+NPCFLAGS +=  -e $(IMAGE).elf -d $(REF_SO_PATH) -b
 CFLAGS += -DMAINARGS=\"$(mainargs)\"
 
-# Define marco to enable trace and difftest in npc 
+# Define marco to enable trace and difftest in npc. 
 # Set a certain value 1 to make marco IFDEF() valid.
-MARCO += -DCONFIG_ITRACE=1
-MARCO += -DCONFIG_FTRACE=1
-MARCO += -DCONFIG_DIFFTEST=1
+MARCO += -DCONFIG_ITRACE=1 # instructions trace
+MARCO += -DCONFIG_FTRACE=1 # function call/ret trace
+MARCO += -DCONFIG_MTRACE=1 # memory trace
+MARCO += -DCONFIG_DIFFTEST=1 # difftest
 
 .PHONY: $(AM_HOME)/am/src/riscv/npc/trm.c
 
