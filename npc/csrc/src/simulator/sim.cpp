@@ -83,7 +83,6 @@ void npc_exec_once(){
 
 	disassemble(p, g_npc_state.logbuf + sizeof(g_npc_state.logbuf) - p,
 		g_frozen_pc, inst, ilen);
-	//printf("%s\n", g_npc_state.logbuf);
 #endif
 
 #ifdef CONFIG_FTRACE
@@ -94,7 +93,6 @@ void npc_exec_once(){
 
 	if(ftrace_enable){
 		write_uncondjump_trace(g_frozen_pc, rd, dnpc);
-		//ftracedata_display_once();
 	}
 	
 	

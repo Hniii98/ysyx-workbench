@@ -89,8 +89,10 @@ extern "C" {
 #define unlikely(cond) __builtin_expect(cond, 0)
 #endif
 
-#define FMT_WORD "0x%08" PRIx32
+
 #define FMT_PADDR "0x%08" PRIx32
+
+#define FMT_WORD "0x%08" PRIx32
 #define FMT_BYTE "0x%02" PRIx8
 #define FMT_HALFWORD "0x%04" PRIx16
 

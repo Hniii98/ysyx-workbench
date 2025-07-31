@@ -5,33 +5,40 @@
 
 
 uint32_t  npc_pmem_read(uint32_t raddr){
-	// printf(ANSI_FMT("\tnpc: read four bytes of memory at " FMT_PADDR, ANSI_FG_WHITE) "\n",
-    //     raddr);
-	return paddr_read(raddr, 4);
+	/* 
+	   To simplify, always read four bytes data in raddr to verilator .
+	   corresponding data slice and extend process done in memory.v.
+	   Memory read in npc in combinational logic, it will execute many
+	   times before being stable, which makes log confused. So we remove
+	   memory read trace. 
+	*/
+	uint32_t rdata = paddr_read(raddr, 4);
+	return rdata;
 }
 
 
 void npc_pmem_write(uint32_t waddr, uint32_t wdata, uint8_t wmask){
-	printf(ANSI_FMT("\tnpc: write data {" FMT_WORD "} to memory at address " FMT_PADDR ".", ANSI_FG_WHITE),
-        wdata,
-        waddr); 
-	if(wmask == 0x3u) {
-		paddr_write(waddr, 1, wdata ); // write lowwest one byte
-		printf("Data lenth is 1 bytes.\n");
-		return;
-	}
-	else if(wmask == 0xFu) {
-		paddr_write(waddr, 2, wdata ); // write lowwest two bytes
-		printf("Data lenth is 2 bytes.\n");
-		return;
-	}
-	else if(wmask == 0xFFu) { 
-		paddr_write(waddr, 4, wdata); // write all four bytes
-		printf("Data lenth is 4 bytes.\n");
-		return;
-	}
+	switch (wmask) {
+		case 0x3u:  // one bytes
+			paddr_write(waddr, 1, wdata );
+			IFDEF(CONFIG_MTRACE, 
+					printf(ANSI_FMT("\tnpc: write data { " FMT_BYTE " } to memory at address " FMT_PADDR ".\n", ANSI_FG_GREEN),
+						(uint8_t)wdata, waddr););
+			break;
+		case 0xfu:  // two bytes
+			paddr_write(waddr, 2, wdata );
+			IFDEF(CONFIG_MTRACE, 
+					printf(ANSI_FMT("\tnpc: write data { " FMT_HALFWORD " } to memory at address " FMT_PADDR ".\n", ANSI_FG_GREEN),
+						(uint16_t)wdata, waddr););
+			break;
+		case 0xffu: // four bytes
+			paddr_write(waddr, 4, wdata); 
+			IFDEF(CONFIG_MTRACE, 
+					printf(ANSI_FMT("\tnpc: write data { " FMT_WORD " } to memory at address " FMT_PADDR ".\n", ANSI_FG_GREEN),
+						wdata, waddr););
+			break;
+		default:
+			printf("Invalid write mask " FMT_BYTE "\n", wmask);
+}
 
-	printf("Invalid write data  mask '" FMT_BYTE "', should be one of '0x3' or '0xF'"  
-			"or '0xFF' \n", wmask);
-	
 }

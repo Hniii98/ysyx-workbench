@@ -18,7 +18,10 @@ module memory(
 );
 
 	
-	/* Memory read logic */
+	/* 
+		Memory read logic, it only supports  memory read without address 
+		alignment for now .
+	*/
 	reg [31:0] raw_data;
 	wire [31:0] signed_byte;
 	wire [31:0] signed_halfword;
@@ -44,7 +47,7 @@ module memory(
 
 	always @(*) begin
 		if(MemRW == `MEM_READ) begin
-			raw_data = npc_pmem_read(addr); // align to four byte
+			raw_data = npc_pmem_read(addr); // without address alignment
 		end
 		else begin
 			raw_data = 32'h0;
@@ -70,21 +73,9 @@ module memory(
 
 	always @(posedge clk) begin
 		if(MemRW == `MEM_WRITE) begin
-			npc_pmem_write(addr, data_towrite, mask);
+			npc_pmem_write(addr, data_towrite, mask); // without address alignment
 		end
 	end
-
-
-
-
-	// always @(posedge clk) begin
-	// 	if(MemRW == `MEM_WRITE) begin
-	// 		npc_pmem_write(addr & ~32'h3, data_towrite, mask);
-	// 	end
-	// end
-
-
-
 							
 endmodule
 
