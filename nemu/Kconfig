@@ -154,12 +154,12 @@ config ITRACE
   default y
 
 config ITRACE_COND
-  depends on ITRACE
+  depends on ITRACE 
   string "Only trace instructions when the condition is true"
   default "true"
 
 config IRINGTRACE
-  depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+  depends on ITRACE
   bool "Enable instruction tracer ring buffer"
   default n
 
@@ -182,9 +182,16 @@ config MTRACE_END
 
 
 config FTRACE
-  depends on  TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+  depends on ITRACE
   bool "Enable function tracer"
   default n
+
+config DTRACE
+  depends on TRACE
+  bool "Enable device tracer"
+  default n
+
+
 
 
 config DIFFTEST
