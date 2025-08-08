@@ -11,9 +11,12 @@ typedef struct{
   size_t pos;
   size_t size;
 } BufContext;
+// TODO: compose all emitter context to BufContext
 
 typedef void (*EmitFunc) (char ch, void *context); // callback
 
+
+/* Decide where a character emit to */
 static void stream_emitter(char ch, void *context){
   putch(ch); // only support stdout for now.
 }
@@ -24,14 +27,13 @@ static void buf_emitter(char ch, void *context){
   if(c->pos < c->size-1) c->buf[c->pos++] = ch; // safely writing
 }
 
-// TODO: compose all emitter context to BufContext
 static void null_emitter(char ch, void *context){
   /* Do nothing about emit, only countng */
   (*(size_t *)context)++;
 }
 
 
-
+/* A wrapper of emitter */
 static int emit_number(EmitFunc emit, void *context, int num, int base){
   char buf[64];
   int len = 0;
@@ -59,6 +61,7 @@ static int emit_string(EmitFunc emit, void *context, const char* str){
   return len;
 }
 
+/* Core format process function */
 static int format_core(EmitFunc emit, void *context, const char *fmt, va_list ap){
   int total = 0;
 
