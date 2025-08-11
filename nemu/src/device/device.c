@@ -44,12 +44,6 @@ void device_update() {
   last = now;
 
   IFDEF(CONFIG_HAS_VGA, vga_update_screen());
-  IFDEF(CONFIG_HAS_TIMER,
-    do { /* Little endian */
-      mmio_write(CONFIG_RTC_MMIO    , 4, (uint32_t)now); // write low 32 bits
-      mmio_write(CONFIG_RTC_MMIO + 4, 4, now >> 32); // write high 32 bits
-    } while(0)                        
-  );
 
 #ifndef CONFIG_TARGET_AM
   SDL_Event event;
