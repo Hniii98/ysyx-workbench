@@ -16,15 +16,15 @@ void param_init(){
 	contextp = new VerilatedContext;
 	contextp->traceEverOn(true);
 	dut = new Vtop{contextp};
-	tfp = new VerilatedVcdC;
-	dut->trace(tfp, 99);
-	tfp->open("dump.vcd");
+	//tfp = new VerilatedVcdC;
+	//dut->trace(tfp, 99);
+	//tfp->open("dump.vcd");
 }
 
 void sim_exit(){
-	tfp->close();
+	//tfp->close();
 	delete dut;
-	delete tfp;
+	//delete tfp;
 	delete contextp;
 }
 
@@ -32,13 +32,13 @@ void single_cycle(){
       // 下降沿
     dut->clk = 0; 
     dut->eval();
-    tfp->dump(contextp->time());
+  	//tfp->dump(contextp->time());
     contextp->timeInc(1);
     
     // 上升沿
     dut->clk = 1;
     dut->eval();
-    tfp->dump(contextp->time());
+   	//tfp->dump(contextp->time());
     contextp->timeInc(1);
 }
 

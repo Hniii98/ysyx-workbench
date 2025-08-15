@@ -1,6 +1,12 @@
 #include <dpic_impl.h>
 #include <sim.hh>
 #include <paddr.h>
+#include <utils.h>
+
+#define SERIAL_ADDR 0xa00003F8
+#define SERIAL_END  (SERIAL_ADDR + 8)
+#define TIMER_UPTIME_ADDR  0xa0000048  
+#define TIMER_UPTIME_HIGH  0xa000004C  
 
 
 
@@ -12,8 +18,17 @@ uint32_t  npc_pmem_read(uint32_t raddr){
 	   times before being stable, which makes log confused. So we remove
 	   memory read trace. 
 	*/
-	uint32_t rdata = paddr_read(raddr, 4);
-	return rdata;
+	if (raddr >= TIMER_UPTIME_ADDR && raddr < TIMER_UPTIME_ADDR + 8) {
+        uint64_t time_us = get_time();
+        if (raddr == TIMER_UPTIME_ADDR) {
+            return (uint32_t)(time_us & 0xFFFFFFFF); 
+        } else if (raddr == TIMER_UPTIME_HIGH) {
+            return (uint32_t)(time_us >> 32);       
+        }
+    } 
+    
+    // 
+    return paddr_read(raddr, 4);
 }
 
 

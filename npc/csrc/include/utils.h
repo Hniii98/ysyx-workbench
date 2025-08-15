@@ -43,6 +43,7 @@ extern NPC_STATE g_npc_state;
 
 /* timer */
 void init_rand();
+uint64_t get_time();
 
 
 
