@@ -71,4 +71,7 @@ struct gpu_canvas {
   };
 } __attribute__((packed));
 
+
+#define AM_AUDIO_NULL 0
+
 #endif
