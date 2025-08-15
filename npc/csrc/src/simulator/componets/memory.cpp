@@ -18,6 +18,12 @@ uint32_t  npc_pmem_read(uint32_t raddr){
 
 
 void npc_pmem_write(uint32_t waddr, uint32_t wdata, uint8_t wmask){
+
+	if(waddr >= SERIAL_ADDR && waddr <= SERIAL_END) { 
+		putchar(wdata);
+		return;
+	} 
+
 	switch (wmask) {
 		case 0x3u:  // one bytes
 			paddr_write(waddr, 1, wdata );

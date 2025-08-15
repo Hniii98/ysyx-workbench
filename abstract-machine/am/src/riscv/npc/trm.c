@@ -15,6 +15,8 @@ Area heap = RANGE(&_heap_start, PMEM_END);
 static const char mainargs[] = MAINARGS;
 
 void putch(char ch) {
+  volatile uint32_t *serial = (uint32_t *)0xa00003F8;
+  *serial = (uint8_t)ch;  // 写入字符到串口
 }
 
 void halt(int code) {

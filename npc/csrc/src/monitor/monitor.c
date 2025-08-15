@@ -54,10 +54,12 @@ static long load_img(){
 
 	FILE *fp = fopen(img_file, "rb");
 	assert(fp);
-
+	
 	/* measure size */
 	fseek(fp, 0, SEEK_END);
 	long size = ftell(fp);
+
+	printf("[npc] loading '%s' to npc, size: %lu KB \n", img_file, size/1024);
 
 	/* load img */
 	fseek(fp, 0, SEEK_SET);
