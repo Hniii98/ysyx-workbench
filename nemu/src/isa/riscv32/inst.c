@@ -118,7 +118,7 @@ static int decode_exec(Decode *s) {
   INSTPAT("0100000 ????? ????? 101 ????? 00100 11", srai  , I, R(rd) = (int32_t)src1 >> (imm & 0x1F));  
 
   
-  INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall , I, s->dnpc = isa_raise_intr(11, s->pc));  
+  INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall , I, s->dnpc = isa_raise_intr(-1, s->pc));  
   INSTPAT("0011000 00010 00000 000 00000 11100 11", mret  , I, s->dnpc = csr_read(MEPC));
   
   INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw , I, 
