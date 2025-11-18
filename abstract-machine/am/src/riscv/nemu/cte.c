@@ -11,7 +11,7 @@ Context* __am_irq_handle(Context *c) {
   if (user_handler) {
     Event ev = {0};
     switch (c->mcause) {
-      case (uintptr_t)-1: 
+      case 11: 
         ev.event = EVENT_YIELD; 
         break;
       default: 
@@ -39,9 +39,10 @@ bool cte_init(Context*(*handler)(Event, Context*)) {
 }
 
 Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
-  Context *c = kstack.end - 1; 
-  c->gpr[2] =(uintptr_t) kstack.end;
+  Context *c =(Context *) kstack.end - 1; 
   c->mepc = (uintptr_t)entry;  
+  c->gpr[2] = (uintptr_t)kstack.end;
+  c->gpr[10] = (uintptr_t)arg;
   return c;
 }
 
