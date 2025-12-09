@@ -11,13 +11,13 @@ module regfiles(
     output [31:0] rdata2,
     output [31:0] x10_data // for DPI-C return value in control.v
 ); 
-    localparam REG_WIDTH = 32;
-    localparam REG_DEPTH = 32;
+    localparam GPR_BITS = 32;
+    localparam GPR_NUMS = 32;
 
     /* General purpose regfiles */
-    reg [REG_WIDTH-1:0] gpr [0:REG_DEPTH-1];
-
-    
+    // Using reg type array because this represents architectural state and should be DPI-visible.
+    reg [GPR_BITS-1:0] gpr [0:GPR_NUMS-1];
+ 
     /* Define marco */
     `define REG_GENERATE_MACRO(index) \
         Reg #(32, 32'h0) u_reg``index ( \
