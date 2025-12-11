@@ -12,7 +12,7 @@ module writeback(
 	localparam DEFAULT_WBDATA = 32'h0;
 
 	/* Mux output data depends on control signals WBSel */
-	MuxKeyWithDefault #(3, 2, 32) writeback_mux(
+	MuxKeyWithDefault #(4, 2, 32) writeback_mux(
 		.out(writeback_data),
 		.key(WBSel),
 		.default_out(DEFAULT_WBDATA),

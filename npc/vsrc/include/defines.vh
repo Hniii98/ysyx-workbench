@@ -73,6 +73,7 @@
 `define WRITEBACK_FROM_SNPC		2'b00
 `define WRITEBACK_FROM_ALU		2'b01
 `define WRITEBACK_FROM_MEM      2'b10
+`define WRITEBACK_FROM_CSR		2'b11
 `define WRITEBACK_FROM_NCARE 	2'bxx
 
 
