@@ -4,6 +4,7 @@ module writeback(
 	input [31:0] alu_result,
 	input [31:0] static_nextpc,
 	input [31:0] mem_output,
+	input [31:0] csr_rdata,
 	input [1:0]  WBSel,
 	output [31:0] writeback_data
 );
@@ -18,7 +19,8 @@ module writeback(
 		.lut({
 			`WRITEBACK_FROM_ALU ,	alu_result,	 
 			`WRITEBACK_FROM_SNPC,	static_nextpc,
-			`WRITEBACK_FROM_MEM ,   mem_output
+			`WRITEBACK_FROM_MEM ,   mem_output,
+			`WRITEBACK_FROM_CSR ,   csr_rdata
 		})
 	);
 	
