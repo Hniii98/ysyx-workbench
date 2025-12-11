@@ -1,4 +1,6 @@
 `include "../templates/Reg.v"
+`include "../templates/MuxKeyWithDefault.v"
+`include "../include/defines.vh"
 
 module  sysregfiles(
 	input clk,
@@ -15,21 +17,22 @@ module  sysregfiles(
 wire [CSR_BITS-1:0] csr [0:CSR_NUMS-1];
 
 /* CSR indices mapping logic */
-localparam IDX_MSTATUS = 3'b000;
-localparam IDX_MTVEC = 3'b001;
-localparam IDX_MEPC = 3'b010;
-localparam IDX_MCAUSE = 3'b011;
-localparam IDX_INVALID = 3'b111;
+localparam IDX_MSTATUS = 2'b00;
+localparam IDX_MTVEC = 2'b01;
+localparam IDX_MEPC = 2'b10;
+localparam IDX_MCAUSE = 2'b11;
+
 
 localparam CSR_BITS = 32; 
 localparam CSR_NUMS = 4; 
 
-wire [2:0] mapped_index;
+wire [1:0] mapped_index;
+wire map_valid;
 
-MuxKeyWithDefault #(4, 12, 3) csr_index_mapping (
+MuxKeyWithDefault #(4, 12, 2) csr_index_mapping (
 	.out(mapped_index),
 	.key(wraddr),
-	.default_out(IDX_INVALID), 
+	.default_out(IDX_MCAUSE), 
 	.lut({
 		12'h300, IDX_MSTATUS,
 		12'h305, IDX_MTVEC  ,
@@ -38,20 +41,25 @@ MuxKeyWithDefault #(4, 12, 3) csr_index_mapping (
 	})
 );
 
+assign map_valid = (wraddr == 12'h300) ||
+                  	  (wraddr == 12'h305) ||
+                  	  (wraddr == 12'h341) ||
+                  	  (wraddr == 12'h342);
+
 
 // mcause value for environment call from M-mode
 localparam [CSR_BITS-1:0] CAUSE_M_MODE = 32'd11;
 localparam CSR_DEFAULT_INPUT = 32'h00000000; 
 
 // Compute writing data for exception */
-wire except_active = (CSROp == `CSR_ECALL);
+wire except_active = (CSROp == `CSROp_ECALL);
 wire [CSR_BITS-1:0] mepc_wdata = static_nextpc;
 wire [CSR_BITS-1:0] mcause_wdata = CAUSE_M_MODE;
 
 
 /* CSR writing logic */
-reg final_wen [0:CSR_NUMS-1];
-reg [CSR_BITS-1:0] final_wdata [0:CSR_NUMS-1];
+reg  final_wen [CSR_NUMS-1];
+reg [CSR_BITS-1:0] final_wdata [CSR_NUMS-1];
 
 integer i;
 always @(*) begin
@@ -69,7 +77,7 @@ always @(*) begin
 		final_wen[IDX_MCAUSE]   = 1'b1;
 		final_wdata[IDX_MCAUSE] = mcause_wdata;
 	end
-	else if (CSRWEn &&  mapped_index != IDX_INVALID) begin
+	else if (CSRWEn && map_valid) begin
         final_wen[mapped_index]   = 1'b1;
 
         case (CSROp)
@@ -92,7 +100,7 @@ end
 		.din(final_wdata[index]), \
 		.dout(csr[index]) \
 	)
--
+
 /* instantiate registers (Reg module) with per-entry wen/data */
 
 Reg #(CSR_BITS, 32'h00001800) u_csr_mstatus (
