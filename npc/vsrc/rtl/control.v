@@ -17,20 +17,27 @@ module control(
     output [2:0] BrOp, // branch option
     output IsBr,  // whether instruction is branch  
     output IsJAL, // whether instruction is jal
-    output IsJALR
+    output IsJALR,
+    output IsECALL,
+    output CSRWEn,
+    output [1:0] CSROp // operation of csr done to its input
+
 );
     /* Slice instrcution bits */
     wire [6:0] opcode;
     wire [2:0] funct3;
     wire [6:0] funct7;
     wire [4:0] rd;
+    wire [4:0] rs1;
  
  
     assign opcode = inst[6:0];
     assign funct3 = inst[14:12];
     assign funct7 = inst[31:25];
     assign rd     = inst[11:7];
+    assign rs1    = inst[19:15];
 
+    /* ================= Main control signals decoder for normal instruction ================= */
 
     /* Level one decoder of all kinds instructions */ 
     wire [2:0] imm_type_wire;
@@ -59,7 +66,7 @@ module control(
     /* 13 bits basic control signals decoder for instructions, including {RegWEN, 
         ASrc, BSrc, ALUOp, MemRW, WriteSrc, IsSigned, DataSize} . */
 
-    localparam [12:0] DEFAULT_CTRL_SIGNALS = 13'h0; // safe control signals for illegal instrutions
+    localparam [12:0] DEFAULT_CTRL_SIGNALS = 13'h0; // safe control signals for illegal instrutions or sysytem instructions.
    
     /* U-type instructions decoder */
     wire [12:0] utype_ctrl_wire; // excluing immediate value type signals
@@ -231,7 +238,7 @@ module control(
             ITYPE_LOAD      , iload_ctrl_wire,
             ITYPE_OPERATION , iop_ctrl_wire  ,
             ITYPE_DEFAULT   , DEFAULT_CTRL_SIGNALS       // unsupported i-type instrction output default  
-        })                                               // control signals
+        })                                               
     );
 
 
@@ -346,10 +353,10 @@ module control(
 
 
     /* Basic control signals final output  mux */
-    wire [12:0] ctrl_wire;
+    wire [12:0] norm_ctrl_wire;
 
-    MuxKeyWithDefault #(6, 3, 13) final_ctrl_mux (
-        .out(ctrl_wire),
+    MuxKeyWithDefault #(6, 3, 13) normal_ctrl_mux (
+        .out(norm_ctrl_wire),
         .key(imm_type_wire),
         .default_out(DEFAULT_CTRL_SIGNALS),
         .lut({
@@ -361,24 +368,114 @@ module control(
             `R_TYPE, rtype_ctrl_wire
         })
     );
+
+    /* ================= sub control signals decoder for system instruction ================= */
+ 
+    // System instruction need extral signals to control CSR  behavior( 1 bit for writing 
+    // or not, 2 bits for operation done to input of CSR, these 3 bits i call it system control).
+
+    // We haven't added the side effect of CSR reading behavior, so ignore reading control
+    // and keep always readable. 
+
+    wire [12:0] isys_csr_ctrl_wire;
+    wire [12:0] isys_trap_ctrl_wire; // trap includes ebreak/ecall, ebraek have implemented via DPI-C 
+
+    assign isys_csr_ctrl_wire = {                     `REG_WRITABLE , `OPA_FROM_NCARE  ,
+                                 `OPB_FROM_NCARE     ,`ALU_NCARE    , `MEM_READ        ,
+                                 `WRITEBACK_FROM_CSR ,`TYPE_NCARE   , `DATASIZE_NCARE }; // csrrw & csrrs
     
+    
+    assign isys_trap_ctrl_wire = {                     `REG_UNWRITABLE, `OPA_FROM_NCARE  ,
+                                  `OPB_FROM_NCARE     ,`ALU_NCARE     , `MEM_READ        ,
+                                  `WRITEBACK_FROM_CSR ,`TYPE_NCARE    , `DATASIZE_NCARE }; // ecall
 
 
+    wire is_ecall;
+    wire [12:0] sys_ctrl_wire;
 
+    assign is_ecall = (funct3 == 3'b000); // distinc ecall from itype system instruction.
+
+    MuxKeyWithDefault #(2, 1, 13) isys_ctrl_mux (
+    .out(sys_ctrl_wire),
+    .key(is_ecall),
+    .default_out(DEFAULT_CTRL_SIGNALS),
+    .lut({
+        1'b1, isys_trap_ctrl_wire,
+        1'b0, isys_csr_ctrl_wire
+        })
+    );
+
+    /* ================= control signals mux for all instructions ================= */
+    wire is_sys_inst;
+    assign is_sys_inst = (opcode == 7'b111_0011);
+
+    wire [12:0] ctrl_wire;
+    assign {RegWEn, ASrc, BSrc, ALUOp, MemRW, WriteSrc, IsSigned, DataSize} = ctrl_wire; // compose control signals
+
+    MuxKeyWithDefault #(2, 1, 13) ctrl_mux (
+    .out(ctrl_wire),
+    .key(is_sys_inst),
+    .default_out(DEFAULT_CTRL_SIGNALS),
+    .lut({
+        1'b1, sys_ctrl_wire,
+        1'b0, norm_ctrl_wire
+        })
+    );
+
+
+    
+    /* ================= system control signals decoder for all instructions ================= */
+
+    always @(*) begin
+        CSRWEn = `CSR_UNWRITABLE; // default
+        CSROp  = `CSROp_NCARE; // default
+        case(opcode)
+            7'b111_0011: begin // system instructions
+                case(funct3)
+                    3'b000: begin 
+                        case(funct7)
+                            7'b0000000: begin // ecall
+                                CSROp  = `CSROp_ECALL; 
+                            end
+                            default: begin  // ebreak
+                                CSROp = `CSROp_NCARE; 
+                            end
+                        endcase
+                    end
+                    3'b001: begin // csrrw
+                        CSROp = `CSROp_WRITE; 
+                        CSRWEn = `CSR_WRITABLE;  // We don't concern side effect of reading here when rd = x0.
+                    end
+                    3'b010: begin // csrrs
+                        case(rs1)
+                            5'b00000: begin // If rs = x0
+                                CSROp = `CSROp_NCARE;
+                                CSRWEn = `CSR_UNWRITABLE;
+                            end
+                            default: begin // rs != x0
+                                CSROp = `CSROp_SETBITS;
+                                CSRWEn = `CSR_WRITABLE;
+                            end
+                        endcase
+                    end
+                    default: begin // the rest of csrxxx inst
+                        CSROp = `CSROp_NCARE; 
+                    end
+                endcase
+            end
+            default: begin // non-system insructions
+                CSROp = `CSROp_NCARE; 
+            end
+        endcase
+    end
+
+    
     /* Assignment */
-    assign {RegWEn, ASrc, BSrc, ALUOp, MemRW, WriteSrc, IsSigned, DataSize} = ctrl_wire; // compose signals
-
     assign IsJAL = (imm_type_wire == `J_TYPE);
     assign IsJALR = (itype_subtype_wire == ITYPE_UNCONDJUMP);
-
-
-
     assign BrOp = funct3;
     assign IsBr = (imm_type_wire == `B_TYPE);
     assign ImmType = imm_type_wire;
-
-
-
 
     /* ------------------------------- DPI-C --------------------------------*/
 
