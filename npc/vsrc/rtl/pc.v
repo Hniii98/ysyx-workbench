@@ -1,4 +1,4 @@
-
+`include "../include/defines.vh"
 module pc (
     input clk,
     input rst,
