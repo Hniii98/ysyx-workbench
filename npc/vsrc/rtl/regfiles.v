@@ -51,7 +51,7 @@ module regfiles(
     export "DPI-C" function npc_send_gprval;
  
     function int unsigned npc_send_gprval(int unsigned index);
-        if (index < REG_DEPTH)
+        if (index < GPR_NUMS)
             npc_send_gprval = gpr[index];
         else
             npc_send_gprval = 0;
