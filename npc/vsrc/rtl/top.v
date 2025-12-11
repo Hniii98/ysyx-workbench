@@ -8,9 +8,11 @@ module top(
     wire    [4:0] inst_rd;
     wire    [4:0] inst_rs1;
     wire    [4:0] inst_rs2;
+    wire    [11:0] inst_csr;
     assign inst_rd  = inst[11:7];
     assign inst_rs1 = inst[19:15];
     assign inst_rs2 = inst[24:20];
+    assign inst_csr = inst[31:20];
 
     /* Control signals */
     wire [2:0]  control_immtype;
@@ -25,7 +27,10 @@ module top(
     wire [2:0]  control_brop; // branch option
     wire        control_isbr;
     wire        control_isjal;
-    wire        control_isjalr;      
+    wire        control_isjalr;  
+    wire        control_csrwen;
+    wire [1:0]  control_csrop;
+
 
 
     /* Writeback wire */
@@ -35,6 +40,10 @@ module top(
     wire [31:0] regfiles_rs1_data;
     wire [31:0] regfiles_rs2_data;
     wire [31:0] regfiles_x10_data;
+
+    /* SysRegfiles wire */
+    wire [31:0] sysregfiles_read_data;
+    wire [31:0] sysregfiles_mtvec_data;
 
     /* Immediate  wire */
     wire [31:0] immgen_data;
@@ -52,19 +61,6 @@ module top(
     /* Branch wire */
     wire        branch_brtaken;
 
-
-    // /* Keep instructions same in a cycle */
-    // always @(posedge clk or posedge rst) begin
-    //     if (rst)
-    //         inst_reg <= 32'b0;
-    //     else
-    //         inst_reg <= inst;  // 锁存指令
-    // end
-
-    // assign inst_rd  = inst_reg[11:7];
-    // assign inst_rs1 = inst_reg[19:15];
-    // assign inst_rs2 = inst_reg[24:20];
-
     /* PC  */
     pc u_pc(
         .clk            (clk),
@@ -73,7 +69,9 @@ module top(
         .BrTaken        (branch_brtaken),
         .IsJAL          (control_isjal),
         .IsJALR         (control_isjalr),
+        .CSROp          (control_csrop),
         .alu_result     (alu_result),
+        .data_mtvec     (sysregfiles_read_data),
         .pc_current     (pc_current),
         .pc_snpc        (pc_snpc)    
     );
@@ -95,7 +93,9 @@ module top(
         .BrOp           (control_brop),
         .IsBr           (control_isbr),
         .IsJAL          (control_isjal),
-        .IsJALR         (control_isjalr)
+        .IsJALR         (control_isjalr),
+        .CSRWEn         (control_csrwen),
+        .CSROp          (control_csrop)
     );
 
     /* Regfiles */
@@ -111,6 +111,20 @@ module top(
         .rdata2       (regfiles_rs2_data),
         .x10_data      (regfiles_x10_data)
     );
+
+    /* SysRegfiles */
+    sysregfiles u_sysregfiles(
+        .clk           	(clk            ),
+        .rst           	(rst            ),
+        .CSRWEn        	(control_csrwen         ),
+        .CSROp         	(control_csrop          ),
+        .wraddr        	(inst_csr         ),
+        .data_rs1      	(regfiles_rs1_data       ),
+        .static_nextpc 	(pc_snpc  ),
+        .rdata         	(sysregfiles_read_data          ),
+        .data_mtvec    	(sysregfiles_mtvec_data     )
+    );
+    
 
     /* Immgen */
     immgen u_immgen(
@@ -156,6 +170,7 @@ module top(
         .alu_result     (alu_result),
         .static_nextpc  (pc_snpc),
         .mem_output     (memory_data_out),
+        .csr_rdata      (sysregfiles_read_data),
         .WBSel          (control_wbsrc),
         .writeback_data (writeback_data_out)
     );
