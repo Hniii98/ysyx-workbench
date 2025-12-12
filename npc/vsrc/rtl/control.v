@@ -18,8 +18,8 @@ module control(
     output IsBr,  // whether instruction is branch  
     output IsJAL, // whether instruction is jal
     output IsJALR,
-    output CSRWEn,
-    output [1:0] CSROp // operation of csr done to its input
+    output reg CSRWEn,
+    output reg [1:0] CSROp // operation of csr done to its input
 
 );
     /* Slice instrcution bits */
