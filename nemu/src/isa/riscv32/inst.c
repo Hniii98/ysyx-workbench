@@ -119,7 +119,6 @@ static int decode_exec(Decode *s) {
 
   
   INSTPAT("0000000 00000 00000 000 00000 11100 11", ecall , I, s->dnpc = isa_raise_intr(11, s->pc+4));  
-  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret  , I, s->dnpc = csr_read(MEPC));
   
   INSTPAT("??????? ????? ????? 001 ????? 11100 11", csrrw , I, 
     word_t temp = csr_read(imm);
@@ -218,6 +217,9 @@ static int decode_exec(Decode *s) {
         else R(rd) = src1 % src2;
     } while (0)
   );
+
+  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret  , R, s->dnpc = csr_read(MEPC));
+
 
   /* TYPE_B */
   INSTPAT("??????? ????? ????? 000 ????? 11000 11", beq   , B, 
