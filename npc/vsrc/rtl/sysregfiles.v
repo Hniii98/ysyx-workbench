@@ -7,11 +7,14 @@ module  sysregfiles(
 	input rst,
 	input CSRWEn,
 	input [1:0] CSROp,
+	input IsECALL,
+	input IsMRET,
 	input [11:0] wraddr, // write & read address
 	input [31:0] data_rs1,
 	input [31:0] static_nextpc, // for ecall inst
 	output [31:0] rdata,
-	output [31:0] data_mtvec
+	output [31:0] data_mtvec,
+	output [31:0] data_mepc
 );
 
 wire [CSR_BITS-1:0] csr [0:CSR_NUMS-1];
@@ -41,10 +44,10 @@ MuxKeyWithDefault #(4, 12, 2) csr_index_mapping (
 	})
 );
 
-assign map_valid = (wraddr == 12'h300) ||
-                  	  (wraddr == 12'h305) ||
-                  	  (wraddr == 12'h341) ||
-                  	  (wraddr == 12'h342);
+assign map_valid = 	(wraddr == 12'h300) ||
+					(wraddr == 12'h305) ||
+					(wraddr == 12'h341) ||
+					(wraddr == 12'h342);
 
 
 // mcause value for environment call from M-mode
@@ -52,7 +55,7 @@ localparam [CSR_BITS-1:0] CAUSE_M_MODE = 32'd11;
 localparam CSR_DEFAULT_INPUT = 32'h00000000; 
 
 // Compute writing data for exception */
-wire except_active = (CSROp == `CSROp_ECALL);
+wire except_active = (IsECALL == 1'b1);
 wire [CSR_BITS-1:0] mepc_wdata = static_nextpc;
 wire [CSR_BITS-1:0] mcause_wdata = CAUSE_M_MODE;
 
@@ -138,6 +141,7 @@ Reg #(CSR_BITS, 32'h00000000) u_csr_mcause (
 /* Assignment */
 assign rdata = csr[mapped_index];
 assign data_mtvec = csr[IDX_MTVEC];
+assign data_mepc = csr[IDX_MEPC];
 
 endmodule
 

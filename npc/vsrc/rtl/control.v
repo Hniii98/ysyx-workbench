@@ -19,8 +19,9 @@ module control(
     output IsJAL, // whether instruction is jal
     output IsJALR,
     output reg CSRWEn,
-    output reg [1:0] CSROp // operation of csr done to its input
-
+    output reg [1:0] CSROp, // operation of csr done to its input
+    output IsECALL,
+    output IsMRET
 );
     /* Slice instrcution bits */
     wire [6:0] opcode;
@@ -28,6 +29,7 @@ module control(
     wire [6:0] funct7;
     wire [4:0] rd;
     wire [4:0] rs1;
+    wire [4:0] rs2;
  
  
     assign opcode = inst[6:0];
@@ -35,6 +37,7 @@ module control(
     assign funct7 = inst[31:25];
     assign rd     = inst[11:7];
     assign rs1    = inst[19:15];
+    assign rs2    = inst[24:20];
 
     /* ================= Main control signals decoder for normal instruction ================= */
 
@@ -433,15 +436,9 @@ module control(
         case(opcode)
             7'b111_0011: begin // system instructions
                 case(funct3)
-                    3'b000: begin 
-                        case(funct7)
-                            7'b0000000: begin // ecall
-                                CSROp  = `CSROp_ECALL; 
-                            end
-                            default: begin  // ebreak
-                                CSROp = `CSROp_NCARE; 
-                            end
-                        endcase
+                    3'b000: begin  // non-csr cluster system inst: trap/trap return
+                            CSROp = `CSROp_NCARE;
+                            CSRWEn = `CSR_UNWRITABLE; 
                     end
                     3'b001: begin // csrrw
                         CSROp = `CSROp_WRITE; 
@@ -470,13 +467,15 @@ module control(
         endcase
     end
 
-    
     /* Assignment */
     assign IsJAL = (imm_type_wire == `J_TYPE);
     assign IsJALR = (itype_subtype_wire == ITYPE_UNCONDJUMP);
     assign BrOp = funct3;
     assign IsBr = (imm_type_wire == `B_TYPE);
     assign ImmType = imm_type_wire;
+
+    assign IsECALL = (is_sys_inst == 1'b1) && (funct3 == 3'b000) && ({funct7, rs2} == 12'h000);
+    assign IsMRET = (is_sys_inst == 1'b1) && (funct3 == 3'b000) && ({funct7, rs2} == 12'h302);
 
     /* ------------------------------- DPI-C --------------------------------*/
 

@@ -30,6 +30,8 @@ module top(
     wire        control_isjalr;  
     wire        control_csrwen;
     wire [1:0]  control_csrop;
+    wire        control_isecall;
+    wire        control_ismret;
 
 
 
@@ -44,6 +46,7 @@ module top(
     /* SysRegfiles wire */
     wire [31:0] sysregfiles_read_data;
     wire [31:0] sysregfiles_mtvec_data;
+    wire [31:0] sysregfiles_mepc_data;
 
     /* Immediate  wire */
     wire [31:0] immgen_data;
@@ -69,9 +72,11 @@ module top(
         .BrTaken        (branch_brtaken),
         .IsJAL          (control_isjal),
         .IsJALR         (control_isjalr),
-        .CSROp          (control_csrop),
+        .IsECALL        (control_isecall),
+        .IsMRET         (control_ismret),
         .alu_result     (alu_result),
         .data_mtvec     (sysregfiles_read_data),
+        .data_mepc      (sysregfiles_mepc_data),
         .pc_current     (pc_current),
         .pc_snpc        (pc_snpc)    
     );
@@ -95,7 +100,9 @@ module top(
         .IsJAL          (control_isjal),
         .IsJALR         (control_isjalr),
         .CSRWEn         (control_csrwen),
-        .CSROp          (control_csrop)
+        .CSROp          (control_csrop),
+        .IsECALL        (control_isecall),
+        .IsMRET         (control_ismret)
     );
 
     /* Regfiles */
@@ -118,11 +125,14 @@ module top(
         .rst           	(rst            ),
         .CSRWEn        	(control_csrwen         ),
         .CSROp         	(control_csrop          ),
+        .IsECALL        (control_isecall),
+        .IsMRET         (control_ismret),
         .wraddr        	(inst_csr         ),
         .data_rs1      	(regfiles_rs1_data       ),
         .static_nextpc 	(pc_snpc  ),
         .rdata         	(sysregfiles_read_data          ),
-        .data_mtvec    	(sysregfiles_mtvec_data     )
+        .data_mtvec    	(sysregfiles_mtvec_data     ),
+        .data_mepc      (sysregfiles_mepc_data)
     );
     
 

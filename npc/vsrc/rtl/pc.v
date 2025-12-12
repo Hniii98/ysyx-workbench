@@ -6,9 +6,11 @@ module pc (
     input BrTaken,
     input IsJAL,
     input IsJALR,
-    input [1:0] CSROp,
+    input IsECALL,
+    input IsMRET,
     input [31:0] alu_result,   
     input [31:0] data_mtvec,
+    input [31:0] data_mepc,
     output [31:0] pc_current,   // current PC value for fetching instruction
     output [31:0] pc_snpc // static next pc for writeback
     
@@ -22,14 +24,22 @@ module pc (
 
     // Exception detect
     wire except_active;
-    assign except_active = (CSROp == `CSROp_ECALL);
+    assign except_active = (IsECALL == 1'b1);
+
+    // Exception return
+    wire except_return;
+    assign except_return = (IsMRET == 1'b1);
 
     /* Next pc update logic */
     always @(*) begin
+        // priority   except active > except return > normal jump
         next_pc = static_next_pc; // default
 
         if(except_active) begin
             next_pc = data_mtvec;
+        end
+         else if (except_return) begin 
+            next_pc = data_mepc;      
         end
         else if (IsJALR) begin 
             next_pc = alu_result;      
