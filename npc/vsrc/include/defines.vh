@@ -97,9 +97,8 @@
 
 /* Define processes of input that about to write in CSR */
 `define CSROp_WRITE			2'b00   // write initial value in rs1
-`define CSROp_SETBITS			2'b01
+`define CSROp_SETBITS		2'b01
 `define CSROp_CLEARBITS		2'b10
-`define CSROp_ECALL			2'b11
 // CSR normal writing behavior need a normal option and CSR_WRITABLE.
 // So in here we don't wanna CSROp accidently be CSR_ECALL.
 `define CSROp_NCARE			2'b00 
