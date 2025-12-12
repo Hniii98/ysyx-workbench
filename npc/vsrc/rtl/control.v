@@ -376,31 +376,33 @@ module control(
     // We haven't added the side effect of CSR reading behavior, so ignore reading control
     // and keep always readable. 
 
-    wire [12:0] isys_csr_ctrl_wire;
-    wire [12:0] isys_trap_ctrl_wire; // trap includes ebreak/ecall, ebraek have implemented via DPI-C 
+    wire [12:0] sys_csr_ctrl_wire; // csr cluster system instructions
+    wire [12:0] sys_noncsr_ctrl_wire; // non csr cluster system  instructions 
 
-    assign isys_csr_ctrl_wire = {                     `REG_WRITABLE , `OPA_FROM_NCARE  ,
+    assign sys_csr_ctrl_wire = {                     `REG_WRITABLE , `OPA_FROM_NCARE   ,
                                  `OPB_FROM_NCARE     ,`ALU_NCARE    , `MEM_READ        ,
                                  `WRITEBACK_FROM_CSR ,`TYPE_NCARE   , `DATASIZE_NCARE }; // csrrw & csrrs
     
     
-    assign isys_trap_ctrl_wire = {                     `REG_UNWRITABLE, `OPA_FROM_NCARE  ,
-                                  `OPB_FROM_NCARE     ,`ALU_NCARE     , `MEM_READ        ,
-                                  `WRITEBACK_FROM_CSR ,`TYPE_NCARE    , `DATASIZE_NCARE }; // ecall
+    assign sys_noncsr_ctrl_wire = {                        `REG_UNWRITABLE, `OPA_FROM_NCARE  ,
+                                  `OPB_FROM_NCARE       ,  `ALU_NCARE     , `MEM_READ        ,
+                                  `WRITEBACK_FROM_NCARE ,  `TYPE_NCARE    , `DATASIZE_NCARE }; // non-csr
 
 
-    wire is_ecall;
+
+
+    wire is_noncsr_cluster;
     wire [12:0] sys_ctrl_wire;
 
-    assign is_ecall = (funct3 == 3'b000); // distinc ecall from itype system instruction.
+    assign is_noncsr_cluster = (funct3 == 3'b000); // distinc csr cluster from itype system instruction.
 
     MuxKeyWithDefault #(2, 1, 13) isys_ctrl_mux (
     .out(sys_ctrl_wire),
-    .key(is_ecall),
+    .key(is_noncsr_cluster),
     .default_out(DEFAULT_CTRL_SIGNALS),
     .lut({
-        1'b1, isys_trap_ctrl_wire,
-        1'b0, isys_csr_ctrl_wire
+        1'b1, sys_noncsr_ctrl_wire,
+        1'b0, sys_csr_ctrl_wire
         })
     );
 
