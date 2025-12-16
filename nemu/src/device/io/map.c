@@ -58,11 +58,8 @@ word_t map_read(paddr_t addr, int len, IOMap *map) {
   paddr_t offset = addr - map->low;
   invoke_callback(map->callback, offset, len, false); // prepare data to read
   IFDEF(CONFIG_DTRACE, 
-    _Log(ANSI_FMT("Read device [%s] at" FMT_PADDR " for %d bytes.\n", ANSI_FG_WHITE),
-      map->name, 
-      addr, 
-      len
-    )
+        _Log(ANSI_FMT("Read device [%s] at" FMT_PADDR " for %d bytes.\n", ANSI_FG_WHITE),
+             map->name, addr, len)
   );
   
   word_t ret = host_read(map->space + offset, len);
@@ -74,12 +71,8 @@ void map_write(paddr_t addr, int len, word_t data, IOMap *map) {
   check_bound(map, addr);
   paddr_t offset = addr - map->low;
   IFDEF(CONFIG_DTRACE, 
-    _Log(ANSI_FMT("Write device [%s] at " FMT_PADDR " for %d bytes of "  FMT_WORD ".\n", ANSI_FG_WHITE),
-      map->name, 
-      addr, 
-      len,
-      data
-    )
+        _Log(ANSI_FMT("Write device [%s] at " FMT_PADDR " for %d bytes of "  FMT_WORD ".\n", ANSI_FG_WHITE),
+                       map->name, addr, len, data)
   );
   host_write(map->space + offset, len, data);
   invoke_callback(map->callback, offset, len, true);
