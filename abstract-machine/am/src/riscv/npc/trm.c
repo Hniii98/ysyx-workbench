@@ -16,7 +16,7 @@ static const char mainargs[] = MAINARGS;
 
 void putch(char ch) {
   volatile uint32_t *serial = (uint32_t *)0xa00003F8;
-  *serial = (uint8_t)ch;  // 写入字符到串口
+  *serial = (uint8_t)ch;  // write to serial port
 }
 
 void halt(int code) {
@@ -26,7 +26,9 @@ void halt(int code) {
     :
     : "r"(code)
   );
-  __builtin_unreachable();
+
+  // should not reach here
+  while (1);
 }
 
 
