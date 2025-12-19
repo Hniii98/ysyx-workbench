@@ -67,8 +67,8 @@ static void init_sdl(){
 }
 
 static void audio_io_handler(uint32_t offset, int len, bool is_write) {
-  if(!is_write) return; // read option don't need any optio
-  if(is_write && offset == 0x10 && audio_base[reg_init]) {
+  if(!is_write) return; // read option don't need any operation
+  if(is_write && offset == 0x10 && audio_base[reg_init]) { // init sdl when reg_init set to 1
       init_sdl();
       audio_base[reg_init] = 0;
   }
@@ -100,5 +100,5 @@ void init_audio() {
 #endif
   sbuf = (uint8_t *)new_space(CONFIG_SB_SIZE);
   add_mmio_map("audio-sbuf", CONFIG_SB_ADDR, sbuf, CONFIG_SB_SIZE, audio_consumer_handler);
-  memset((uint8_t *)sbuf, 0, (size_t)CONFIG_SB_SIZE-1);
+  memset(sbuf,0 , (size_t)CONFIG_SB_SIZE);
 }
