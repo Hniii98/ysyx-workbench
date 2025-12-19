@@ -11,9 +11,7 @@
 #define AUDIO_COUNT_ADDR     (AUDIO_ADDR + 0x14)
 
 void __am_audio_init() {
-  // this may slowdown system, we rely on reg_count for initialization
-  // uint8_t *dst = (uint8_t *)(uintptr_t)AUDIO_SBUF_ADDR;
-  // memset(dst, 0, io_read(AM_AUDIO_CONFIG).bufsize);
+  outl(AUDIO_INIT_ADDR, 1); // inform hardware to init SDL with default parameters.
 }
 
 void __am_audio_config(AM_AUDIO_CONFIG_T *cfg) {
@@ -22,11 +20,10 @@ void __am_audio_config(AM_AUDIO_CONFIG_T *cfg) {
 }
 
 void __am_audio_ctrl(AM_AUDIO_CTRL_T *ctrl) {
-
   outl(AUDIO_FREQ_ADDR, ctrl->freq);
   outl(AUDIO_CHANNELS_ADDR, ctrl->channels);
   outl(AUDIO_SAMPLES_ADDR, ctrl->samples);
-  outl(AUDIO_INIT_ADDR, 1); // inform hardware update parameters.                        
+  outl(AUDIO_INIT_ADDR, 1); // inform hardware reset all parameters and re-init.                       
   
 }
 
