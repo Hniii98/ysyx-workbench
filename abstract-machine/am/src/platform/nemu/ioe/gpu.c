@@ -1,5 +1,6 @@
 #include <am.h>
 #include <nemu.h>
+#include <stdbool.h>
 
 #define SYNC_ADDR (VGACTL_ADDR + 4)
 
@@ -7,14 +8,14 @@
 void __am_gpu_init() {
   
   AM_GPU_CONFIG_T cfg;
-  ioe_read(AM_GPU_CONFIG, &cfg);
+  ioe_read(AM_GPU_CONFIG, &cfg); // fetch config of vga which include vmem size
 
   uint32_t *fb = (uint32_t *)(uintptr_t)FB_ADDR;
   for (int i = 0; i < cfg.height * cfg.width; i++) {
-    fb[i] = ~AM_GPU_NULL; 
+    fb[i] = ~AM_GPU_NULL; // init all pixels to black
   }
 
-  outl(SYNC_ADDR, 0);
+  outl(SYNC_ADDR, false); // init sync to false
 }
 
 void __am_gpu_config(AM_GPU_CONFIG_T *cfg) {
