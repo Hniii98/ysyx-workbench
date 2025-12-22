@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cinttypes>
+#include <stdint.h> 
 
 void npc_set_scope(const char* name);
 bool sim_get_is_uncondjump();
